@@ -7,7 +7,7 @@
 <a href="https://github.com/camaraproject/QualityByDesign/releases/latest" title="Latest Release"><img src="https://img.shields.io/github/release/camaraproject/QualityByDesign?style=plastic"></a>
 
 # QualityByDesign
-Repository to describe, develop, document, and test the QualityByDesign concept and potential API for it within the Sub Project [ConnectivityInsights](https://wiki.camaraproject.org/display/CAM/ConnectivityInsights) of CAMARA
+Repository to describe, develop, document, and test the QualityByDesign concept and potential APIs for it within the Sub Project [ConnectivityInsights](https://wiki.camaraproject.org/display/CAM/ConnectivityInsights) of CAMARA
 
 ## Scope
 
