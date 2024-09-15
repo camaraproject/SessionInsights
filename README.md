@@ -1,17 +1,17 @@
-<a href="https://github.com/camaraproject/QualityByDesignn/commits/" title="Last Commit"><img src="https://img.shields.io/github/last-commit/camaraproject/QualityByDesignn?style=plastic"></a>
-<a href="https://github.com/camaraproject/QualityByDesignn/issues" title="Open Issues"><img src="https://img.shields.io/github/issues/camaraproject/QualityByDesignn?style=plastic"></a>
-<a href="https://github.com/camaraproject/QualityByDesignn/pulls" title="Open Pull Requests"><img src="https://img.shields.io/github/issues-pr/camaraproject/QualityByDesignn?style=plastic"></a>
-<a href="https://github.com/camaraproject/QualityByDesignn/graphs/contributors" title="Contributors"><img src="https://img.shields.io/github/contributors/camaraproject/QualityByDesignn?style=plastic"></a>
-<a href="https://github.com/camaraproject/QualityByDesignn" title="Repo Size"><img src="https://img.shields.io/github/repo-size/camaraproject/QualityByDesignn?style=plastic"></a>
-<a href="https://github.com/camaraproject/QualityByDesignn/blob/main/LICENSE" title="License"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg?style=plastic"></a>
-<a href="https://github.com/camaraproject/QualityByDesignn/releases/latest" title="Latest Release"><img src="https://img.shields.io/github/release/camaraproject/QualityByDesignn?style=plastic"></a>
+<a href="https://github.com/camaraproject/QualityByDesign/commits/" title="Last Commit"><img src="https://img.shields.io/github/last-commit/camaraproject/QualityByDesign?style=plastic"></a>
+<a href="https://github.com/camaraproject/QualityByDesign/issues" title="Open Issues"><img src="https://img.shields.io/github/issues/camaraproject/QualityByDesign?style=plastic"></a>
+<a href="https://github.com/camaraproject/QualityByDesign/pulls" title="Open Pull Requests"><img src="https://img.shields.io/github/issues-pr/camaraproject/QualityByDesign?style=plastic"></a>
+<a href="https://github.com/camaraproject/QualityByDesign/graphs/contributors" title="Contributors"><img src="https://img.shields.io/github/contributors/camaraproject/QualityByDesign?style=plastic"></a>
+<a href="https://github.com/camaraproject/QualityByDesign" title="Repo Size"><img src="https://img.shields.io/github/repo-size/camaraproject/QualityByDesign?style=plastic"></a>
+<a href="https://github.com/camaraproject/QualityByDesign/blob/main/LICENSE" title="License"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg?style=plastic"></a>
+<a href="https://github.com/camaraproject/QualityByDesign/releases/latest" title="Latest Release"><img src="https://img.shields.io/github/release/camaraproject/QualityByDesign?style=plastic"></a>
 
-# QualityByDesignn
-Repository to describe, develop, document, and test the QualityByDesignn concept and potential API for it within the Sub Project [ConnectivityInsights](https://wiki.camaraproject.org/display/CAM/ConnectivityInsights) of CAMARA
+# QualityByDesign
+Repository to describe, develop, document, and test the QualityByDesign concept and potential API for it within the Sub Project [ConnectivityInsights](https://wiki.camaraproject.org/display/CAM/ConnectivityInsights) of CAMARA
 
 ## Scope
 
-* Concept and Service APIs for “QualityByDesign” (see APIBacklog.md) <!-- Alternative for multiple APIs: "Service APIs for "QualityByDesignn” -->
+* Concept and Service APIs for “QualityByDesign” (see APIBacklog.md) <!-- Alternative for multiple APIs: "Service APIs for "QualityByDesign” -->
 * The API provides the customer with the ability to:
   - report application KPIs to network operator
   - receive QbD score
@@ -26,9 +26,9 @@ Repository to describe, develop, document, and test the QualityByDesignn concept
 The repository has no (pre)releases yet, work in progress is within the main branch.
 <!-- Optional: an explicit listing of the latest (pre-)release with additional information, e.g. links to the API definitions -->
 <!-- In addition use/uncomment one or multiple the following alternative options when becoming applicable -->
-<!-- Pre-releases of this sub project are available in https://github.com/camaraproject/QualityByDesignn/releases -->
-<!-- The latest public release is available here: https://github.com/camaraproject/QualityByDesignn/releases/latest -->
-<!-- For changes see [CHANGELOG.md](https://github.com/camaraproject/QualityByDesignn/blob/main/CHANGELOG.md) -->
+<!-- Pre-releases of this sub project are available in https://github.com/camaraproject/QualityByDesign/releases -->
+<!-- The latest public release is available here: https://github.com/camaraproject/QualityByDesign/releases/latest -->
+<!-- For changes see [CHANGELOG.md](https://github.com/camaraproject/QualityByDesign/blob/main/CHANGELOG.md) -->
 
 ## Contributing
 * Meetings are held virtually
