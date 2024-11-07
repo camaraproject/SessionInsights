@@ -12,11 +12,11 @@ Repository to describe, develop, document, and test the QualityByDesign concept 
 ## Scope
 
 * Concept and Service APIs for “QualityByDesign” (see APIBacklog.md) <!-- Alternative for multiple APIs: "Service APIs for "QualityByDesign” -->
-* The API provides the customer with the ability to:
+* The API provides an API Consumer with the ability to:
   - report application KPIs to network operator
   - receive QbD score
   - receive root cause analysis and recommended corrective actions
-  - request service improvements                                          
+  - request service improvements
 * Note: in first steps the concept will be described with user stories. The relation to existing APIs (e.g. application-profiles, connectivity-insights, quality-on-demand) will be describe to identify if any and which new API(s) are needed
 * Describe the concept, develop, document, and test the APIs
 * Started: September 2024
