@@ -37,4 +37,4 @@ The repository has no (pre)releases yet, work in progress is within the main bra
     * Minutes: Access [meeting minutes](https://wiki.camaraproject.org/x/UQKeAQ)
 * Mailing List
     * Subscribe / Unsubscribe to the mailing list of this Sub Project https://lists.camaraproject.org/g/sp-coi.
-    * A message to the community of this Sub Project can be sent using sp-coi§@lists.camaraproject.org.
+    * A message to the community of this Sub Project can be sent using sp-coi@lists.camaraproject.org.
