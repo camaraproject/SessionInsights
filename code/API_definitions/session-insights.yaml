@@ -23,7 +23,7 @@ info:
 
     # Application Profile Integration
 
-    This API leverages CAMARA’s Application Profiles to define threshold criteria for session quality. The Application Profile specifies the application's expected network performance requirements and is referenced when creating a session.
+    This API leverages CAMARA’s [Application Profiles](https://github.com/camaraproject/ApplicationProfiles) to define threshold criteria for session quality. The Application Profile specifies the application's expected network performance requirements and is referenced when creating a session.
 
     # Example Use Cases
 
