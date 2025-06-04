@@ -1,0 +1,792 @@
+openapi: 3.0.3
+info:
+  title: Session Insights API
+  version: wip
+  x-camara-commonalities: 0.6
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  description: |
+    The Session Insights API is part of the CAMARA Connectivity Insights family. It extends the capabilities of the Connectivity Insights API by enabling applications to continuously monitor and evaluate their real-time session quality, based on observed KPIs and network operator feedback.
+
+    While the Connectivity Insights API allows applications to query whether a network can meet predefined performance thresholds (e.g., jitter, packet loss, bitrate), the Session Insights API supports the lifecycle of an ongoing session. It allows applications to stream KPI metrics to the network operator, receive dynamic scoring on current session performance, and engage in adaptive optimization strategies.
+
+    # Key Features
+
+    - Create a monitoring session using an existing Application Profile.
+    - Send application-level KPIs (e.g., latency, jitter, throughput, loss) to the network operator.
+    - Receive a Session Insights Score reflecting network-evaluated session quality.
+    - Respond to events and adjust application configuration.
+    - Receive notifications and root cause analysis (RCA) when session quality degrades.
+    - Request network service improvements using complementary CAMARA APIs (e.g., QualityOnDemand, NetworkAccessManagement).
+    - Gracefully terminate the session when monitoring is no longer needed.
+
+    # Application Profile Integration
+
+    This API leverages CAMARA’s Application Profiles to define threshold criteria for session quality. The Application Profile specifies the application's expected network performance requirements and is referenced when creating a session.
+
+    # Example Use Cases
+
+    ## Wi-Fi Congestion Mitigation
+    - Application sets thresholds for latency and packet loss.
+    - Session score drops due to congestion, triggering an RCA event.
+    - RCA identifies local Wi-Fi congestion; application adjusts QoS policies (e.g., enables WMM) to prioritize traffic.
+
+    ## Access Network Impairment
+    - Degraded score attributed to poor signal or congestion in the access network.
+    - Application requests service enhancement through APIs like QualityOnDemand or NetworkAccessManagement.
+
+    # Authorization and Authentication
+
+    Access to the Session Insights API follows CAMARA security models and supports both two-legged and three-legged authorization flows, depending on the sensitivity of session data and user consent requirements.
+
+    For further details, refer to the CAMARA Security and Interoperability Profile.
+
+externalDocs:
+  description: Project documentation at Camara
+  url: https://github.com/camaraproject/SessionInsights
+
+servers:
+  - url: "{apiRoot}/session-insights/vwip"
+    variables:
+      apiRoot:
+        default: http://localhost:9091
+        description: |
+          API root, defined by service provider, e.g.
+          `api.example.com` or `api.example.com/somepath`
+
+tags:
+  - name: Network Quality
+    description: |
+      Manage the lifecycle of real-time monitoring sessions between an application and the network.
+      Applications can stream KPIs, receive session scores and RCA events, and take actions based on
+      current session quality and network conditions.
+
+
+paths:
+  /sessions:
+    post:
+      tags:
+        - Session Insights
+      summary: Create a Session Insights session
+      description: |
+        Create a new session for monitoring application performance and network
+        quality. The session can be used to stream KPIs, receive session
+        scores, and handle RCA events.
+
+        The session is created under an existing Application Profile, which
+        defines the expected performance thresholds and other parameters.
+
+        The operator allocates a sink (HTTP webhook or MQTT topic) for the
+        application to send metrics and receive notifications.
+      operationId: createSession
+      parameters:
+        - $ref: "#/components/parameters/x-correlator"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/HTTPSessionRequest"
+                - $ref: "#/components/schemas/MQTTSessionRequest"
+              discriminator:
+                propertyName: protocol
+      responses:
+        "201":
+          description: Session created
+          headers:
+            x-correlator:
+              $ref: "#/components/headers/x-correlator"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateSessionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest400"
+        "401":
+          $ref: "#/components/responses/Unauthorized401"
+        "403":
+          $ref: "#/components/responses/Forbidden403"
+        "409":
+          $ref: "#/components/responses/Conflict409"
+
+  /sessions/{sessionId}:
+    get:
+      tags:
+        - Session Insights
+      summary: "Get session by sessionId"
+      description: |
+        Retrieve the details of a specific session by its operator-assigned
+        session ID.
+      operationId: getSession
+      parameters:
+        - name: sessionId
+          in: path
+          description: Operator-assigned session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/SessionId"
+        - $ref: "#/components/parameters/x-correlator"
+      responses:
+        "200":
+          description: Session detail
+          headers:
+            x-correlator:
+              $ref: "#/components/headers/x-correlator"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          $ref: "#/components/responses/Unauthorized401"
+        "403":
+          $ref: "#/components/responses/Forbidden403"
+        "404":
+          $ref: "#/components/responses/NotFound404"
+
+    delete:
+      tags:
+        - Session Insights
+      summary: Delete session
+      description: |
+        Delete a session by its operator-assigned session ID. This will stop
+        all notifications and metrics streaming for the session.
+      operationId: deleteSession
+      parameters:
+        - name: sessionId
+          in: path
+          description: Operator-assigned session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/SessionId"
+        - $ref: "#/components/parameters/x-correlator"
+      responses:
+        "204":
+          description: Deleted
+          headers:
+            x-correlator:
+              $ref: "#/components/headers/x-correlator"
+        "401":
+          $ref: "#/components/responses/Unauthorized401"
+        "403":
+          $ref: "#/components/responses/Forbidden403"
+        "404":
+          $ref: "#/components/responses/NotFound404"
+  /sessions/{sessionId}/metrics:
+    post:
+      tags:
+        - Session Insights
+      summary: Send session metrics
+      description: |
+        Stream application-level KPIs (e.g., latency, jitter, throughput, loss)
+        to the network operator for the specified session. This is used to
+        evaluate session quality and trigger notifications if thresholds are
+        breached.
+      operationId: sendSessionMetrics
+      parameters:
+        - name: sessionId
+          in: path
+          description: Operator-assigned session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/SessionId"
+        - $ref: "#/components/parameters/x-correlator"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MetricsPayload"
+      responses:
+        "204":
+          description: Metrics accepted
+          headers:
+            x-correlator:
+              $ref: "#/components/headers/x-correlator"
+        "400":
+          $ref: "#/components/responses/BadRequest400"
+        "401":
+          $ref: "#/components/responses/Unauthorized401"
+        "403":
+          $ref: "#/components/responses/Forbidden403"
+
+components:
+  parameters:
+    x-correlator:
+      name: x-correlator
+      in: header
+      description: Correlation id for the different services
+      schema:
+        type: string
+        pattern: ^[a-zA-Z0-9-]{0,55}$
+        example: "b4333c46-49c0-4f62-80d7-f0ef930f1c46"
+
+  headers:
+    x-correlator:
+      description: Correlation id for the different services
+      schema:
+        type: string
+        pattern: ^[a-zA-Z0-9-]{0,55}$
+
+  schemas:
+    SessionId:
+      description: Session ID in UUID format
+      type: string
+      format: uuid
+
+    SessionRequest:
+      description: |
+        Request body for creating a new session. The session is created under
+        an existing Application Profile, which defines the expected
+        performance thresholds and other parameters.
+
+        The operator allocates a sink (HTTP webhook or MQTT topic) for the
+        application to send metrics and receive notifications.
+      type: object
+      properties:
+        applicationProfileId:
+          $ref: "#/components/schemas/ApplicationProfileId"
+        device:
+          $ref: "#/components/schemas/Device"
+        applicationServer:
+          $ref: "#/components/schemas/ApplicationServer"
+        applicationSessionId:
+          type: string
+          description: |
+            Optional app-level meeting / match / stream ID used for correlation.
+          example: "meet-12345"
+        protocol:
+          $ref: "#/components/schemas/Protocol"
+        types:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventType"
+      required:
+        - applicationProfileId
+        - device
+        - applicationServer
+        - protocol
+        - subscribedEventTypes
+
+    SessionBase:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Operator-assigned session ID
+          example: "op-sess-abc123"
+        applicationSessionId:
+          type: string
+          description: Application-provided session reference
+          example: "meet-12345"
+        device:
+          $ref: "#/components/schemas/Device"
+        applicationServer:
+          $ref: "#/components/schemas/ApplicationServer"
+        protocol:
+          $ref: "#/components/schemas/Protocol"
+        sink:
+          type: string
+          description: |
+            • HTTP → webhook URL (from request)
+            • MQTT → quality topic (allocated by operator)
+        subscribedEventTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventType"
+        startTime:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - device
+        - applicationServer
+        - protocol
+        - sink
+        - subscribedEventTypes
+        - startTime
+
+    HTTPSettings:
+      type: object
+      description: No additional settings
+
+    MQTTSettings:
+      type: object
+      required: [brokerUri, metricsTopic, qualityTopic, qos]
+      properties:
+        brokerUri:
+          type: string
+          format: uri
+        metricsTopic:
+          type: string
+          description: Topic the **application PUBLISHES** KPI messages to
+          example: session/op-sess-abc123/appSession/meet-12345/metrics
+        qualityTopic:
+          type: string
+          description: Topic the **application SUBSCRIBES** to for CloudEvents
+          example: session/op-sess-abc123/appSession/meet-12345/quality
+        qos:
+          type: integer
+          enum:
+            - 0
+            - 1
+        retain:
+          type: boolean
+          default: false
+        messageExpiryInterval:
+          type: integer
+
+    HTTPSessionRequest:
+      allOf:
+        - $ref: "#/components/schemas/SessionRequest"
+        - type: object
+          properties:
+            sink:
+              type: string
+              description: Webhook URL for event delivery
+            sinkCredential:
+              type: string
+              description: Optional credential for HTTP callbacks
+          required:
+            - sink
+
+    MQTTSessionRequest:
+      allOf:
+        - $ref: "#/components/schemas/SessionRequest"
+        - type: object
+          properties:
+            sinkCredential:
+              type: string
+              description: Credential for MQTT broker access
+
+    HTTPSession:
+      allOf:
+        - $ref: "#/components/schemas/SessionBase"
+        - type: object
+          properties:
+            protocol:
+              type: string
+              enum:
+                - "HTTP"
+            protocolSettings:
+              $ref: "#/components/schemas/HTTPSettings"
+
+    MQTTSession:
+      allOf:
+        - $ref: "#/components/schemas/SessionBase"
+        - type: object
+          properties:
+            protocol:
+              type: string
+              enum:
+                - "MQTT3"
+                - "MQTT5"
+            protocolSettings:
+              $ref: "#/components/schemas/MQTTSettings"
+
+    Session:
+      oneOf:
+        - $ref: "#/components/schemas/HTTPSession"
+        - $ref: "#/components/schemas/MQTTSession"
+      discriminator:
+        propertyName: protocol
+
+    CreateHTTPSession:
+      allOf:
+        - $ref: "#/components/schemas/HTTPSession"
+        - type: object
+          properties:
+            sinkCredential:
+              type: string
+              description: Returned only on creation (HTTP)
+
+    CreateMQTTSession:
+      allOf:
+        - $ref: "#/components/schemas/MQTTSession"
+        - type: object
+          properties:
+            sinkCredential:
+              type: string
+              description: Broker credential (creation only)
+
+    CreateSessionResponse:
+      oneOf:
+        - $ref: "#/components/schemas/CreateHTTPSession"
+        - $ref: "#/components/schemas/CreateMQTTSession"
+      discriminator:
+        propertyName: protocol
+
+    Device:
+      description: |
+        End-user equipment able to connect to a network. Examples of
+        devices include smartphones or IoT sensors/actuators.
+
+        The developer can choose to provide the below specified device
+        identifiers:
+
+        * `ipv4Address`
+        * `ipv6Address`
+        * `phoneNumber`
+        * `networkAccessIdentifier`
+
+      type: object
+      properties:
+        phoneNumber:
+          $ref: "#/components/schemas/PhoneNumber"
+        networkAccessIdentifier:
+          $ref: "#/components/schemas/NetworkAccessIdentifier"
+        ipv4Address:
+          $ref: "#/components/schemas/DeviceIpv4Addr"
+        ipv6Address:
+          $ref: "#/components/schemas/DeviceIpv6Address"
+      minProperties: 1
+
+    NetworkAccessIdentifier:
+      description: |
+        A public identifier addressing a subscription in a mobile network. In
+        3GPP terminology, it corresponds to the GPSI formatted with the
+        External Identifier ({Local Identifier}@{Domain Identifier}). Unlike
+        the telephone number, the network access identifier is not subjected
+        to portability ruling in force, and is individually managed by each
+        operator.
+      type: string
+      example: "123456789@domain.com"
+
+    PhoneNumber:
+      description: |
+        A public identifier addressing a telephone subscription. In mobile
+        networks it corresponds to the MSISDN (Mobile Station International
+        Subscriber Directory Number). In order to be globally unique it has to
+        be formatted in international format, according to E.164 standard,
+        optionally prefixed with '+'.
+      type: string
+      pattern: '^\+?[0-9]{5,15}$'
+      example: "123456789"
+
+    DeviceIpv4Addr:
+      type: object
+      description: |
+        The device should be identified by either the public (observed) IP
+        address and port as seen by the application server, or the private
+        (local) and any public (observed) IP addresses in use by the device
+        (this information can be obtained by various means, for example from
+        some DNS servers).
+
+        If the allocated and observed IP addresses are the same (i.e. NAT is
+        not in use) then  the same address should be specified for both
+        publicAddress and privateAddress.
+
+        If NAT64 is in use, the device should be identified by its
+        publicAddress and publicPort, or separately by its allocated IPv6
+        address (field ipv6Address of the Device object)
+
+        In all cases, publicAddress must be specified, along with at least one
+        of either privateAddress or publicPort, dependent upon which is known.
+        In general, mobile devices cannot be identified by their public IPv4
+        address alone.
+      properties:
+        publicAddress:
+          $ref: "#/components/schemas/SingleIpv4Addr"
+        privateAddress:
+          $ref: "#/components/schemas/SingleIpv4Addr"
+        publicPort:
+          $ref: "#/components/schemas/Port"
+      anyOf:
+        - required: [publicAddress, privateAddress]
+        - required: [publicAddress, publicPort]
+      example: {"publicAddress": "84.125.93.10", "publicPort": 59765}
+
+    DeviceIpv6Address:
+      description: |
+        The device should be identified by the observed IPv6 address, or by any
+        single IPv6 address from within the subnet allocated to the device
+        (e.g. adding ::0 to the /64 prefix).
+
+        The session shall apply to all IP flows between the device subnet and
+        the specified application server, unless further restricted by the
+        optional parameters devicePorts or applicationServerPorts.
+      type: string
+      format: ipv6
+      example: 2001:db8:85a3:8d3:1319:8a2e:370:7344
+    SingleIpv4Addr:
+      description: A single IPv4 address with no subnet mask
+      type: string
+      format: ipv4
+      example: "84.125.93.10"
+
+    Port:
+      description: TCP or UDP port number
+      type: integer
+      minimum: 0
+      maximum: 65535
+
+    ApplicationProfileId:
+      description: Identifier for the Application Profile
+      type: string
+      format: uuid
+
+    ApplicationServer:
+      type: object
+      minProperties: 1
+      properties:
+        domainName:
+          type: string
+        ipv4Address:
+          type: string
+          format: ipv4
+        ipv6Address:
+          type: string
+          format: ipv6
+        port:
+          type: integer
+
+    Protocol:
+      type: string
+      enum:
+        - HTTP
+        - MQTT3
+        - MQTT5
+
+    EventType:
+      type: string
+      enum:
+        - org.camaraproject.session-insights.v0.quality-score
+        - org.camaraproject.session-insights.v0.network-event
+        - org.camaraproject.session-insights.v0.proposed-resolution
+        - org.camaraproject.session-insights.v0.subscription-ends
+
+    # ---------- CloudEvents & data payloads ----------
+    CloudEvent:
+      type: object
+      properties:
+        specversion:
+          type: string
+          enum:
+            - "1.0"
+        id:
+          type: string
+        source:
+          type: string
+        type:
+          $ref: "#/components/schemas/EventType"
+        time:
+          type: string
+          format: date-time
+        datacontenttype:
+          type: string
+          default: application/json
+        data:
+          type: object
+      required:
+        - specversion
+        - id
+        - source
+        - type
+        - time
+        - data
+
+    SessionQualityData:
+      type: object
+      properties:
+        latency:
+          type: number
+          format: float
+        jitter:
+          type: number
+          format: float
+        packetLoss:
+          type: number
+        bitrate:
+          type: number
+        resolution:
+          type: string
+        score:
+          type: integer
+      required:
+        - latency
+        - jitter
+        - packetLoss
+        - bitrate
+        - resolution
+        - score
+
+    ScoreAlertData:
+      type: object
+      properties:
+        score:
+          type: integer
+        threshold:
+          type: integer
+        severity:
+          type: string
+          enum:
+            - warning
+            - critical
+      required:
+        - score
+
+    ResolutionProposedData:
+      type: object
+      properties:
+        resolutionType:
+          type: string
+          enum:
+            - NETWORK_QOS
+            - APPLICATION_CONFIG
+            - OTHER
+        description:
+          type: string
+      required:
+        - resolutionType
+        - description
+
+    SubscriptionEndsData:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    SessionQualityNotification:
+      allOf:
+        - $ref: "#/components/schemas/CloudEvent"
+        - type: object
+          properties:
+            type:
+              enum:
+                - org.camaraproject.session-insights.v0.quality-score
+            data:
+              $ref: "#/components/schemas/SessionQualityData"
+
+    ScoreAlertNotification:
+      allOf:
+        - $ref: "#/components/schemas/CloudEvent"
+        - type: object
+          properties:
+            type:
+              enum:
+                - org.camaraproject.session-insights.v0.network-event
+            data:
+              $ref: "#/components/schemas/ScoreAlertData"
+
+    ResolutionProposedNotification:
+      allOf:
+        - $ref: "#/components/schemas/CloudEvent"
+        - type: object
+          properties:
+            type:
+              enum:
+                - org.camaraproject.session-insights.v0.proposed-resolution
+            data:
+              $ref: "#/components/schemas/ResolutionProposedData"
+
+    SubscriptionEndsNotification:
+      allOf:
+        - $ref: "#/components/schemas/CloudEvent"
+        - type: object
+          properties:
+            type:
+              enum:
+                - org.camaraproject.session-insights.v0.subscription-ends
+            data:
+              $ref: "#/components/schemas/SubscriptionEndsData"
+
+    NotificationEvent:
+      oneOf:
+        - $ref: "#/components/schemas/SessionQualityNotification"
+        - $ref: "#/components/schemas/ScoreAlertNotification"
+        - $ref: "#/components/schemas/ResolutionProposedNotification"
+        - $ref: "#/components/schemas/SubscriptionEndsNotification"
+      discriminator:
+        propertyName: type
+
+    MetricsPayload:
+      type: object
+      description: KPI message published to `metricsTopic`
+      properties:
+        latency:
+          type: number
+          format: float
+        jitter:
+          type: number
+          format: float
+        packetLoss:
+          type: number
+        bitrate:
+          type: number
+        resolution:
+          type: string
+      required:
+        - latency
+        - jitter
+        - packetLoss
+        - bitrate
+        - resolution
+
+    ErrorInfo:
+      type: object
+      properties:
+        status:
+          type: integer
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - status
+        - code
+        - message
+
+  responses:
+    BadRequest400:
+      description: Bad request
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorInfo"
+
+    Unauthorized401:
+      description: Unauthorized
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorInfo"
+
+    Forbidden403:
+      description: Forbidden
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorInfo"
+
+    NotFound404:
+      description: Not found
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorInfo"
+
+    Conflict409:
+      description: Conflict
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorInfo"
