@@ -592,16 +592,48 @@ components:
     SessionQualityData:
       type: object
       properties:
-        latency:
-          type: number
-          format: float
+        upstreamRate:
+          description: |
+            The upstream bitrate
+          allOf:
+            - $ref: "#/components/schemas/Rate"
+        downstreamRate:
+          description: |
+            The downstream bitrate
+          allOf:
+            - $ref: "#/components/schemas/Rate"
+        packetDelay:
+          description: |
+            The packet delay one-way latency between the customer's device
+            and the gateway from the operator's network to other networks. By limiting the delay, the network
+            can provide an acceptable level of performance for various services, such as voice calls,
+            video streaming, and data.
+            The end-to-end or round trip latency will be about two times this value plus the latency not controlled
+            by the operator
+          allOf:
+            - $ref: "#/components/schemas/Duration"
         jitter:
-          type: number
-          format: float
-        packetLoss:
-          type: number
-        bitrate:
-          type: number
+          description: |
+            The variation in round-trip
+            packet delay for the 99th percentile of traffic, following ITU Y.1540
+            standards. It considers only acknowledged packets in a session, which are
+            packets that receive a confirmation of receipt from the recipient (e.g.,
+            using TCP). This requirement helps maintain consistent latency, essential
+            for real-time applications such as VoIP, video calls, and gaming.
+          allOf:
+            - $ref: "#/components/schemas/Duration"
+        packetErrorLossRate:
+          type: integer
+          description: |
+            This field specifies the measured level of data loss during transmission.
+            The value is an exponent of 10, so a value of 3 means that up to 10⁻³, or 0.1%, of the
+            data packets may be lost. This setting is part of a broader system that categorizes
+            different types of network traffic (like phone calls, video streams, or data transfers)
+            to ensure they perform reliably on the network.
+          format: int32
+          minimum: 1
+          maximum: 10
+          example: 3
         resolution:
           type: string
         score:
