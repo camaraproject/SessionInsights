@@ -5,9 +5,13 @@
 <a href="https://github.com/camaraproject/SessionInsights" title="Repo Size"><img src="https://img.shields.io/github/repo-size/camaraproject/SessionInsights?style=plastic"></a>
 <a href="https://github.com/camaraproject/SessionInsights/blob/main/LICENSE" title="License"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg?style=plastic"></a>
 <a href="https://github.com/camaraproject/SessionInsights/releases/latest" title="Latest Release"><img src="https://img.shields.io/github/release/camaraproject/SessionInsights?style=plastic"></a>
+<a href="https://github.com/camaraproject/Governance/blob/main/ProjectStructureAndRoles.md" title="Sandbox API Repository"><img src="https://img.shields.io/badge/Sandbox%20API%20Repository-yellow?style=plastic"></a>
 
 # SessionInsights
-Repository to describe, develop, document, and test the SessionInsights concept and potential APIs for it within the Sub Project [ConnectivityInsights](https://wiki.camaraproject.org/display/CAM/ConnectivityInsights) of CAMARA
+
+Sandbox API Repository to describe, develop, document, and test the SessionInsights Service API(s) in group with [Connectivity Insights](https://lf-camaraproject.atlassian.net/wiki/spaces/CAM/pages/93946006/Connectivity+Insights)
+
+* API Repository [wiki page](https://lf-camaraproject.atlassian.net/wiki/x/44CaBQ)
 
 ## Scope
 
