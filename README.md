@@ -24,7 +24,7 @@ Sandbox API Repository to describe, develop, document, and test the SessionInsig
 * Note: in first steps the concept will be described with user stories. The relation to existing APIs (e.g. application-profiles, connectivity-insights, quality-on-demand) will be describe to identify if any and which new API(s) are needed
 * Describe the concept, develop, document, and test the APIs
 * Started: September 2024
-* Originall proposed as Quality by Design (QbD) - has been renamed to SessionInsights to better reflect the scope of the API
+* Originally proposed as Quality by Design (QbD) - has been renamed to SessionInsights to better reflect the scope of the API
 
 ## Release Information
 
