@@ -120,6 +120,8 @@ paths:
           $ref: "#/components/responses/Forbidden403"
         "409":
           $ref: "#/components/responses/Conflict409"
+        "422":
+          $ref: "#/components/responses/Generic422"
 
   /sessions/{sessionId}:
     get:
@@ -220,6 +222,8 @@ paths:
           $ref: "#/components/responses/Unauthorized401"
         "403":
           $ref: "#/components/responses/Forbidden403"
+        "422":
+          $ref: "#/components/responses/Generic422"
 
 components:
   parameters:
@@ -882,3 +886,25 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorInfo"
+
+    Generic422:
+      description: Unprocessable Content
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorInfo"
+              - type: object
+                properties:
+                  status:
+                    enum:
+                      - 422
+                  code:
+                    enum:
+                      - SERVICE_NOT_APPLICABLE
+                      - MISSING_IDENTIFIER
+                      - UNSUPPORTED_IDENTIFIER
+                      - UNNECESSARY_IDENTIFIER
