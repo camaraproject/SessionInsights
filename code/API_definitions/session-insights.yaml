@@ -38,19 +38,19 @@ info:
 
     # Authorization and Authentication
 
-## Identifying the [ device | phone number ](*) from the access token
+    ## Identifying the [ device | phone number ](*) from the access token
 
-This API requires the API consumer to identify a device as the subject of the API as follows:
-- When the API is invoked using a two-legged access token, the subject will be identified from the optional `device` object, which therefore MUST be provided.
-- When a three-legged access token is used however, this optional identifier MUST NOT be provided, as the subject will be uniquely identified from the access token.
+    This API requires the API consumer to identify a device as the subject of the API as follows:
+    - When the API is invoked using a two-legged access token, the subject will be identified from the optional `device` object, which therefore MUST be provided.
+    - When a three-legged access token is used however, this optional identifier MUST NOT be provided, as the subject will be uniquely identified from the access token.
 
-This approach simplifies API usage for API consumers using a three-legged access token to invoke the API by relying on the information that is associated with the access token and was identified during the authentication process.
+    This approach simplifies API usage for API consumers using a three-legged access token to invoke the API by relying on the information that is associated with the access token and was identified during the authentication process.
 
-## Error handling:
+    ## Error handling:
 
-- If the subject cannot be identified from the access token and the optional `device` object is not included in the request, then the server will return an error with the `422 MISSING_IDENTIFIER` error code.
+    - If the subject cannot be identified from the access token and the optional `device` object is not included in the request, then the server will return an error with the `422 MISSING_IDENTIFIER` error code.
 
-- If the subject can be identified from the access token and the optional `device` is also included in the request, then the server will return an error with the `422 UNNECESSARY_IDENTIFIER` error code. This will be the case even if the same [ device | phone number ](*) is identified by these two methods, as the server is unable to make this comparison.
+    - If the subject can be identified from the access token and the optional `device` is also included in the request, then the server will return an error with the `422 UNNECESSARY_IDENTIFIER` error code. This will be the case even if the same [ device | phone number ](*) is identified by these two methods, as the server is unable to make this comparison.
 
 externalDocs:
   description: Project documentation at Camara
@@ -768,6 +768,55 @@ components:
         - packetLoss
         - bitrate
         - resolution
+
+    Rate:
+      description: Specification of rate
+      type: object
+      properties:
+        value:
+          description: Quantity of rate
+          type: integer
+          example: 10
+          format: int32
+          minimum: 0
+          maximum: 1024
+        unit:
+          $ref: "#/components/schemas/RateUnitEnum"
+
+    Duration:
+      description: Specification of duration
+      type: object
+      properties:
+        value:
+          description: Quantity of duration
+          type: integer
+          example: 12
+          format: int32
+          minimum: 1
+        unit:
+          $ref: "#/components/schemas/TimeUnitEnum"
+
+    TimeUnitEnum:
+      description: Units of time
+      type: string
+      enum:
+        - Days
+        - Hours
+        - Minutes
+        - Seconds
+        - Milliseconds
+        - Microseconds
+        - Nanoseconds
+
+    RateUnitEnum:
+      description: Units of rate
+      type: string
+      enum:
+        - bps
+        - kbps
+        - Mbps
+        - Gbps
+        - Tbps
 
     ErrorInfo:
       type: object
