@@ -18,12 +18,13 @@ Sandbox API Repository to describe, develop, document, and test the SessionInsig
 * Concept and Service APIs for “SessionInsights” (see APIBacklog.md) <!-- Alternative for multiple APIs: "Service APIs for "SessionInsights” -->
 * The API provides an API Consumer with the ability to:
   - report application KPIs to network operator
-  - receive QbD score
+  - receive score from network operator
   - receive root cause analysis and recommended corrective actions
   - request service improvements
 * Note: in first steps the concept will be described with user stories. The relation to existing APIs (e.g. application-profiles, connectivity-insights, quality-on-demand) will be describe to identify if any and which new API(s) are needed
 * Describe the concept, develop, document, and test the APIs
 * Started: September 2024
+* Originally proposed as Quality by Design (QbD) - has been renamed to SessionInsights to better reflect the scope of the API
 
 ## Release Information
 
@@ -37,8 +38,8 @@ The repository has no (pre)releases yet, work in progress is within the main bra
 ## Contributing
 * Meetings are held virtually
     * Schedule: Bi-weekly on Wednesday at 8AM PST (see https://wiki.camaraproject.org/display/CAM/ConnectivityInsights)
-    * [Registration / Join]([https://wiki.camaraproject.org/x/TQAG](https://zoom-lfx.platform.linuxfoundation.org/meeting/92345695827?password=35dff2b2-058d-44de-bd7e-67d08c9e9f9d))
-    * Minutes: Access [meeting minutes](https://wiki.camaraproject.org/x/UQKeAQ)
+    * [Registration / Join](https://zoom-lfx.platform.linuxfoundation.org/meeting/92345695827?password=35dff2b2-058d-44de-bd7e-67d08c9e9f9d)
+    * Minutes: Access [meeting minutes](https://lf-camaraproject.atlassian.net/wiki/x/vzve)
 * Mailing List
     * Subscribe / Unsubscribe to the mailing list of this Sub Project https://lists.camaraproject.org/g/sp-coi.
     * A message to the community of this Sub Project can be sent using sp-coi@lists.camaraproject.org.
