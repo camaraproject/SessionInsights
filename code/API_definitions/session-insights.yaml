@@ -156,6 +156,8 @@ paths:
           $ref: "#/components/responses/Forbidden403"
         "404":
           $ref: "#/components/responses/NotFound404"
+        "410":
+          $ref: "#/components/responses/Generic410"
 
     delete:
       tags:
@@ -185,6 +187,9 @@ paths:
           $ref: "#/components/responses/Forbidden403"
         "404":
           $ref: "#/components/responses/NotFound404"
+        "410":
+          $ref: "#/components/responses/Generic410"
+
   /sessions/{sessionId}/metrics:
     post:
       tags:
@@ -222,6 +227,10 @@ paths:
           $ref: "#/components/responses/Unauthorized401"
         "403":
           $ref: "#/components/responses/Forbidden403"
+        "404":
+          $ref: "#/components/responses/NotFound404"
+        "410":
+          $ref: "#/components/responses/Generic410"
         "422":
           $ref: "#/components/responses/Generic422"
 
@@ -886,6 +895,25 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorInfo"
+
+    Generic410:
+      description: Gone
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorInfo"
+              - type: object
+                properties:
+                  status:
+                    enum:
+                      - 410
+                  code:
+                    enum:
+                      - GONE
 
     Generic422:
       description: Unprocessable Content
