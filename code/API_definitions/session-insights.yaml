@@ -128,6 +128,8 @@ paths:
           $ref: "#/components/responses/Forbidden403"
         "409":
           $ref: "#/components/responses/Conflict409"
+        "422":
+          $ref: "#/components/responses/Generic422"
 
   /sessions/{sessionId}:
     get:
@@ -237,6 +239,8 @@ paths:
           $ref: "#/components/responses/NotFound404"
         "410":
           $ref: "#/components/responses/Generic410"
+        "422":
+          $ref: "#/components/responses/Generic422"
 
 components:
   parameters:
@@ -948,10 +952,25 @@ components:
                   code:
                     enum:
                       - GONE
-          examples:
-            GENERIC_410_GONE:
-              description: Use to notify API Consumer that the session is no longer available
-              value:
-                status: 410
-                code: GONE
-                message: Access to the target resource is no longer available.
+
+    Generic422:
+      description: Unprocessable Content
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorInfo"
+              - type: object
+                properties:
+                  status:
+                    enum:
+                      - 422
+                  code:
+                    enum:
+                      - SERVICE_NOT_APPLICABLE
+                      - MISSING_IDENTIFIER
+                      - UNSUPPORTED_IDENTIFIER
+                      - UNNECESSARY_IDENTIFIER
