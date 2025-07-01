@@ -198,6 +198,52 @@ paths:
         "410":
           $ref: "#/components/responses/Generic410"
 
+  /retrieve-sessions:
+    post:
+      tags:
+        - Session Insights
+      summary: Retrieve Session Insights sessions by device
+      description: |
+        Retrieve all Session Insights sessions for a given device.
+
+        **Notes:**
+        - This operation allows retrieving all active or historical sessions associated with a device.
+        - It uses POST instead of GET to allow passing sensitive device identifiers in the body, per CAMARA guidelines.
+        - The request must include a `device` object if using a two-legged token. If using a three-legged token, do not provide a `device` as the device is derived from the token.
+
+      operationId: retrieveSessionsByDevice
+      parameters:
+        - $ref: "#/components/parameters/x-correlator"
+      requestBody:
+        description: Parameters to get Session Insights session information by device
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RetrieveSessionsInput"
+        required: true
+      responses:
+        "200":
+          description: An array of sessions matching the specified device. Empty array if none found.
+          headers:
+            x-correlator:
+              $ref: "#/components/headers/x-correlator"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetrieveSessionsOutput"
+        "400":
+          $ref: "#/components/responses/BadRequest400"
+        "401":
+          $ref: "#/components/responses/Generic401"
+        "403":
+          $ref: "#/components/responses/Forbidden403"
+        "404":
+          $ref: "#/components/responses/NotFound404"
+        "422":
+          $ref: "#/components/responses/Generic422"
+        "429":
+          $ref: "#/components/responses/Generic429"
+
   /sessions/{sessionId}/metrics:
     post:
       tags:
@@ -874,6 +920,21 @@ components:
         - code
         - message
 
+    RetrieveSessionsInput:
+      description: Parameters to get QoS session information by device
+      type: object
+      properties:
+        device:
+          $ref: "#/components/schemas/Device"
+
+    RetrieveSessionsOutput:
+      description: QoS session information for a given device
+      type: array
+      items:
+        $ref: "#/components/schemas/Session"
+      minItems: 0
+
+
   responses:
     BadRequest400:
       description: Bad request
@@ -974,3 +1035,23 @@ components:
                       - MISSING_IDENTIFIER
                       - UNSUPPORTED_IDENTIFIER
                       - UNNECESSARY_IDENTIFIER
+
+    Generic429:
+      description: Too Many Requests
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorInfo"
+              - type: object
+                properties:
+                  status:
+                    enum:
+                      - 429
+                  code:
+                    enum:
+                      - QUOTA_EXCEEDED
+                      - TOO_MANY_REQUESTS
