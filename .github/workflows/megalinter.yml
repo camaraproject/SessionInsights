@@ -2,8 +2,7 @@
 # MegaLinter GitHub Action configuration file
 # More info at https://megalinter.io
 # CAMARA Project - Github Action for Pull Reqests
-# 31.01.2024 - initial version
-# 08.03.2024 - added javalint config (for QoD tests)
+# 01.07.2025 - initial version for Session Insights
 
 name: MegaLinter
 
