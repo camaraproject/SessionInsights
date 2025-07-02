@@ -1,4 +1,4 @@
-Feature: CAMARA Session Insights API, v0.wip - Operation createSession
+Feature: CAMARA Session Insights API, v0.1.0 - Operation createSession
   As a developer integrating with CAMARA Session Insights API
   I want to create a sessions for real-time quality assessment
   So that I can monitor and optimize my application's network performance

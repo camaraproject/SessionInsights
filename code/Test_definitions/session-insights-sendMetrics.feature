@@ -1,4 +1,4 @@
-Feature: CAMARA Session Insights API, v0.wip - Operation sendSessionMetrics
+Feature: CAMARA Session Insights API, v0.1.0 - Operation sendSessionMetrics
   As a developer integrating with CAMARA Session Insights API
   I want to send application-level KPIs to monitoring sessions
   So that the network operator can evaluate session quality and provide insights

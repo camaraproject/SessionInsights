@@ -1,4 +1,4 @@
-Feature: CAMARA Session Insights API, v0.wip - Operation getSession
+Feature: CAMARA Session Insights API, v0.1.0 - Operation getSession
   As a developer integrating with CAMARA Session Insights API
   I want to retrieve details of an existing session
   So that I can check session status and configuration

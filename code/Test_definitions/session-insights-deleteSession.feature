@@ -1,4 +1,4 @@
-Feature: CAMARA Session Insights API, v0.wip - Operation deleteSession
+Feature: CAMARA Session Insights API, v0.1.0 - Operation deleteSession
   As a developer integrating with CAMARA Session Insights API
   I want to delete a Session Insights sessions
   So that I can clean up resources when monitoring is no longer needed

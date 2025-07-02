@@ -1,4 +1,4 @@
-Feature: CAMARA Session Insights API, v0.wip - Operation retrieveSessionsByDevice
+Feature: CAMARA Session Insights API, v0.1.0 - Operation retrieveSessionsByDevice
   As a developer integrating with CAMARA Session Insights API
   I want to retrieve all sessions associated with a specific device
   So that I can manage and monitor device-specific sessions

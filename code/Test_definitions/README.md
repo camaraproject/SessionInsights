@@ -242,7 +242,7 @@ When modifying or adding test scenarios:
 
 ## API Versioning
 
-These tests are designed for **Session Insights API v0.wip**. When the API version changes:
+These tests are designed for **Session Insights API v0.1.0**. When the API version changes:
 
 1. Update the version references in feature file headers
 2. Review and update test scenarios for any breaking changes

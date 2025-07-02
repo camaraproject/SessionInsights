@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Session Insights API
-  version: wip
+  version: 0.1.0
   x-camara-commonalities: 0.6
   license:
     name: Apache 2.0
