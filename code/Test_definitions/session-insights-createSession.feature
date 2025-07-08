@@ -1,269 +1,394 @@
-Feature: CAMARA Session Insights API, v0.wip - Operation createSession
-  As a developer integrating with CAMARA Session Insights API
-  I want to create a sessions for real-time quality assessment
-  So that I can monitor and optimize my application's network performance
+Feature: CAMARA Session Insights API, vwip - Operation createSession
+    # Input to be provided by the implementation to the tester
+    #
+    # Implementation indications:
+    # * apiRoot: API root of the server URL
+    #
+    # Testing assets:
+    # * A valid Application Profile ID that exists in the system
+    # * Valid device identifiers (phoneNumber, IPv4/IPv6 addresses, networkAccessIdentifier)
+    # * Valid application server configuration (domain name or IP addresses with ports)
+    # * Valid webhook URLs for HTTP protocol testing
+    # * Valid MQTT broker configuration for MQTT protocol testing
+    # * Access tokens with appropriate scopes for 2-legged and 3-legged authentication
+    #
+    # References to OAS spec schemas refer to schemas specified in session-insights.yaml
 
-  Background:
-    Given the Session Insights API is available
-    And I have a valid access token with appropriate scopes
-    And I have a valid Application Profile ID
+  Background: Common createSession setup
+    Given an environment at "apiRoot"
+    And the resource "/session-insights/vwip/sessions"
+    And the header "Content-Type" is set to "application/json"
+    And the header "Authorization" is set to a valid access token
+    And the header "x-correlator" is set to a UUID value
 
-  # Sunny day scenarios - HTTP protocol
+    # Success scenarios
+
+  @session_insights_createSession_01_http_session_creation
   Scenario: Create HTTP session with valid parameters
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with valid HTTP session data
-    Then I receive a 201 response
-    And the response contains "id" property with UUID format
-    And the response contains "protocol" property with value "HTTP"
-    And the response contains "sink" property with webhook URL
-    And the response contains "sinkCredential" property for HTTP callbacks
-    And the response contains "startTime" property with valid date-time
-    And the response contains "expiresAt" property with valid date-time
-    And the response headers contain "x-correlator"
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    When the request "createSession" is sent
+    Then the response status code is 201
+    And the response header "Content-Type" is "application/json"
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response body complies with the OAS schema at "/components/schemas/CreateSessionResponse"
+    And the response property "$.id" is present and complies with the OAS schema at "/components/schemas/SessionId"
+    And the response property "$.protocol" is "HTTP"
+    And the response property "$.sink" is present
+    And the response property "$.startTime" is present and complies with date-time format
+    And the response property "$.expiresAt" is present and complies with date-time format
 
+  @session_insights_createSession_02_mqtt3_session_creation
   Scenario: Create MQTT3 session with valid parameters
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify MQTT3 protocol
-    When I send POST request to "/sessions" with valid MQTT3 session data
-    Then I receive a 201 response
-    And the response contains "id" property with UUID format
-    And the response contains "protocol" property with value "MQTT3"
-    And the response contains "protocolSettings" with MQTT broker configuration
-    And the response contains "sinkCredential" property for MQTT access
-    And the response headers contain "x-correlator"
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "MQTT3"
+    When the request "createSession" is sent
+    Then the response status code is 201
+    And the response header "Content-Type" is "application/json"
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response body complies with the OAS schema at "/components/schemas/CreateSessionResponse"
+    And the response property "$.id" is present and complies with the OAS schema at "/components/schemas/SessionId"
+    And the response property "$.protocol" is "MQTT3"
+    And the response property "$.protocolSettings" is present
 
+  @session_insights_createSession_03_mqtt5_session_creation
   Scenario: Create MQTT5 session with valid parameters
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify MQTT5 protocol
-    When I send POST request to "/sessions" with valid MQTT5 session data
-    Then I receive a 201 response
-    And the response contains "id" property with UUID format
-    And the response contains "protocol" property with value "MQTT5"
-    And the response contains "protocolSettings" with MQTT broker configuration
-    And the response headers contain "x-correlator"
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "MQTT5"
+    When the request "createSession" is sent
+    Then the response status code is 201
+    And the response header "Content-Type" is "application/json"
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response property "$.protocol" is "MQTT5"
+    And the response property "$.protocolSettings" is present
 
+  @session_insights_createSession_04_with_application_session_id
   Scenario: Create session with optional applicationSessionId
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    And I provide an applicationSessionId "meet-12345"
-    When I send POST request to "/sessions" with session data including applicationSessionId
-    Then I receive a 201 response
-    And the response contains "applicationSessionId" property with value "meet-12345"
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    And the request body property "$.applicationSessionId" is set to "meet-12345"
+    When the request "createSession" is sent
+    Then the response status code is 201
+    And the response property "$.applicationSessionId" is "meet-12345"
 
+  @session_insights_createSession_05_ipv4_device_identifier
   Scenario: Create session with IPv4 device identifier
-    Given I have a valid device with IPv4 address and port
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with valid session data
-    Then I receive a 201 response
-    And the response contains device information with IPv4 address
+    Given a valid device with IPv4 address and port
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    When the request "createSession" is sent
+    Then the response status code is 201
+    And the response property "$.device" contains IPv4 address information
 
+  @session_insights_createSession_06_ipv6_device_identifier
   Scenario: Create session with IPv6 device identifier
-    Given I have a valid device with IPv6 address
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with valid session data
-    Then I receive a 201 response
-    And the response contains device information with IPv6 address
+    Given a valid device with IPv6 address
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    When the request "createSession" is sent
+    Then the response status code is 201
+    And the response property "$.device" contains IPv6 address information
 
+  @session_insights_createSession_07_network_access_identifier
   Scenario: Create session with network access identifier
-    Given I have a valid device with networkAccessIdentifier
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with valid session data
-    Then I receive a 201 response
-    And the response contains device information with networkAccessIdentifier
+    Given a valid device with networkAccessIdentifier
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    When the request "createSession" is sent
+    Then the response status code is 201
+    And the response property "$.device" contains networkAccessIdentifier information
 
-  # Rainy day scenarios - Input validation
+    # Errors 400
 
-  Scenario: Create session without required applicationProfileId
-    Given I have a valid device with phoneNumber
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    But I do not provide applicationProfileId
-    When I send POST request to "/sessions" with incomplete session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
-    And the response headers contain "x-correlator"
+  @session_insights_createSession_400.1_missing_application_profile_id
+  Scenario: Missing required applicationProfileId
+    Given a valid device with phoneNumber
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    But the request body property "$.applicationProfileId" is not included
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session without required device
-    Given I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    But I do not provide device information
-    When I send POST request to "/sessions" with incomplete session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_400.2_missing_device
+  Scenario: Missing required device information
+    Given a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    But the request body property "$.device" is not included
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session without required applicationServer
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I specify HTTP protocol with webhook URL
-    But I do not provide applicationServer information
-    When I send POST request to "/sessions" with incomplete session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_400.3_missing_application_server
+  Scenario: Missing required applicationServer
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    But the request body property "$.applicationServer" is not included
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session without required protocol
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    But I do not specify protocol
-    When I send POST request to "/sessions" with incomplete session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_400.4_missing_protocol
+  Scenario: Missing required protocol
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    But the request body property "$.protocol" is not included
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with invalid protocol value
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify an invalid protocol "INVALID_PROTOCOL"
-    When I send POST request to "/sessions" with invalid session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_400.5_invalid_protocol_value
+  Scenario: Invalid protocol value
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "INVALID_PROTOCOL"
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create HTTP session without required sink
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol
-    But I do not provide sink webhook URL
-    When I send POST request to "/sessions" with incomplete HTTP session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_400.6_http_missing_sink
+  Scenario: HTTP session missing required sink
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    But the request body property "$.sink" is not included
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with invalid applicationProfileId format
-    Given I have a valid device with phoneNumber
-    And I have an invalid Application Profile ID "not-a-uuid"
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with invalid session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_400.7_invalid_application_profile_id_format
+  Scenario: Invalid applicationProfileId format
+    Given a valid device with phoneNumber
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    And the request body property "$.applicationProfileId" is set to "not-a-uuid"
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with invalid device phoneNumber format
-    Given I have a device with invalid phoneNumber "invalid-phone"
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with invalid session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_400.8_invalid_phone_number_format
+  Scenario: Invalid phoneNumber format
+    Given a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    And the request body property "$.device.phoneNumber" is set to "invalid-phone"
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with device having no identifiers
-    Given I have a device object with no identifiers
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with invalid session data
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_400.9_device_no_identifiers
+  Scenario: Device object with no identifiers
+    Given a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    And the request body property "$.device" is set to an empty object
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  # Error scenarios - Authorization and permissions
+  @session_insights_createSession_400.10_invalid_content_type
+  Scenario: Invalid Content-Type header
+    Given a valid session request body
+    And the header "Content-Type" is set to "text/plain"
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session without authentication
-    Given I do not have an access token
-    And I have valid session data
-    When I send POST request to "/sessions" without authentication
-    Then I receive a 401 response
-    And the response contains error code "UNAUTHENTICATED"
+  @session_insights_createSession_400.11_malformed_json
+  Scenario: Malformed JSON in request body
+    Given the request body is set to malformed JSON
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with invalid access token
-    Given I have an invalid access token
-    And I have valid session data
-    When I send POST request to "/sessions" with invalid authentication
-    Then I receive a 401 response
-    And the response contains error code "UNAUTHENTICATED"
+    # Generic 401 errors
 
-  Scenario: Create session without sufficient permissions
-    Given I have an access token without required scopes
-    And I have valid session data
-    When I send POST request to "/sessions" with insufficient permissions
-    Then I receive a 403 response
-    And the response contains error code indicating insufficient permissions
+  @session_insights_createSession_401.1_no_authorization_header
+  Scenario: Error response for no header "Authorization"
+    Given the header "Authorization" is not sent
+    And a valid session request body
+    When the request "createSession" is sent
+    Then the response status code is 401
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 401
+    And the response property "$.code" is "UNAUTHENTICATED"
+    And the response property "$.message" contains a user friendly text
 
-  # Error scenarios - Business logic
+  @session_insights_createSession_401.2_expired_access_token
+  Scenario: Error response for expired access token
+    Given the header "Authorization" is set to an expired access token
+    And a valid session request body
+    When the request "createSession" is sent
+    Then the response status code is 401
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 401
+    And the response property "$.code" is "UNAUTHENTICATED"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with non-existent applicationProfileId
-    Given I have a valid device with phoneNumber
-    And I have a non-existent Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with non-existent profile
-    Then I receive a 404 response
-    And the response contains error code indicating resource not found
+  @session_insights_createSession_401.3_invalid_access_token
+  Scenario: Error response for invalid access token
+    Given the header "Authorization" is set to an invalid access token
+    And a valid session request body
+    When the request "createSession" is sent
+    Then the response status code is 401
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 401
+    And the response property "$.code" is "UNAUTHENTICATED"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session that conflicts with existing session
-    Given I have a valid device with phoneNumber
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    And a session already exists for this device and application profile
-    When I send POST request to "/sessions" with conflicting session data
-    Then I receive a 409 response
-    And the response contains error code "CONFLICT"
+    # Generic 403 errors
 
-  # Device identifier validation scenarios
+  @session_insights_createSession_403.1_missing_access_token_scope
+  Scenario: Missing access token scope
+    Given the header "Authorization" is set to an access token that does not include the required scope
+    And a valid session request body
+    When the request "createSession" is sent
+    Then the response status code is 403
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 403
+    And the response property "$.code" is "PERMISSION_DENIED"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with device using 3-legged token and device parameter
-    Given I have a 3-legged access token
-    And I provide device information in the request
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" with device parameter
-    Then I receive a 422 response
-    And the response contains error code "UNNECESSARY_IDENTIFIER"
+    # Errors 404
 
-  Scenario: Create session with 2-legged token but no device parameter
-    Given I have a 2-legged access token
-    And I do not provide device information in the request
-    And I have a valid Application Profile ID
-    And I have a valid application server configuration
-    And I specify HTTP protocol with webhook URL
-    When I send POST request to "/sessions" without device parameter
-    Then I receive a 422 response
-    And the response contains error code "MISSING_IDENTIFIER"
+  @session_insights_createSession_404.1_application_profile_not_found
+  Scenario: applicationProfileId not found
+    Given a valid device with phoneNumber
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    And the request body property "$.applicationProfileId" is set to a valid UUID that does not exist
+    When the request "createSession" is sent
+    Then the response status code is 404
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 404
+    And the response property "$.code" is "NOT_FOUND"
+    And the response property "$.message" contains a user friendly text
 
-  # Content-Type and format validation
+    # Errors 409
 
-  Scenario: Create session with invalid Content-Type
-    Given I have valid session data
-    And I set Content-Type to "text/plain"
-    When I send POST request to "/sessions" with invalid content type
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_409.1_session_conflict
+  Scenario: Session already exists for this device and application profile
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    And a session already exists for this device and application profile combination
+    When the request "createSession" is sent
+    Then the response status code is 409
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 409
+    And the response property "$.code" is "CONFLICT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with malformed JSON
-    Given I have malformed JSON in the request body
-    When I send POST request to "/sessions" with malformed JSON
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+    # Errors 422
 
-  # x-correlator header validation
+  @session_insights_createSession_422.1_three_legged_token_with_device_parameter
+  Scenario: 3-legged token used with device parameter
+    Given the header "Authorization" is set to a valid 3-legged access token
+    And a valid device with phoneNumber is provided in the request body
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    When the request "createSession" is sent
+    Then the response status code is 422
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 422
+    And the response property "$.code" is "UNNECESSARY_IDENTIFIER"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Create session with valid x-correlator header
-    Given I have valid session data
-    And I provide a valid x-correlator header
-    When I send POST request to "/sessions" with correlator
-    Then I receive a 201 response
-    And the response headers contain the same x-correlator value
-
-  Scenario: Create session with invalid x-correlator header format
-    Given I have valid session data
-    And I provide an invalid x-correlator header with special characters
-    When I send POST request to "/sessions" with invalid correlator
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_createSession_422.2_two_legged_token_without_device_parameter
+  Scenario: 2-legged token used without device parameter
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.protocol" is set to "HTTP"
+    And the request body property "$.sink" is set to a valid webhook URL
+    But the request body property "$.device" is not included
+    When the request "createSession" is sent
+    Then the response status code is 422
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 422
+    And the response property "$.code" is "MISSING_IDENTIFIER"
+    And the response property "$.message" contains a user friendly text

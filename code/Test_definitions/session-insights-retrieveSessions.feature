@@ -1,271 +1,301 @@
-Feature: CAMARA Session Insights API, v0.wip - Operation retrieveSessionsByDevice
-  As a developer integrating with CAMARA Session Insights API
-  I want to retrieve all sessions associated with a specific device
-  So that I can manage and monitor device-specific sessions
+Feature: CAMARA Session Insights API, vwip - Operation retrieveSessionsByDevice
+    # Input to be provided by the implementation to the tester
+    #
+    # Implementation indications:
+    # * apiRoot: API root of the server URL
+    #
+    # Testing assets:
+    # * Valid device identifiers (phoneNumber, IPv4/IPv6 addresses, networkAccessIdentifier) with existing sessions
+    # * Valid device identifiers with no existing sessions
+    # * Access tokens with appropriate scopes for 2-legged and 3-legged authentication
+    # * Device identifiers that exist but belong to different users/clients
+    #
+    # References to OAS spec schemas refer to schemas specified in session-insights.yaml
 
-  Background:
-    Given the Session Insights API is available
-    And I have a valid access token with appropriate scopes
+  Background: Common retrieveSessionsByDevice setup
+    Given an environment at "apiRoot"
+    And the resource "/session-insights/vwip/retrieve-sessions"
+    And the header "Content-Type" is set to "application/json"
+    And the header "Authorization" is set to a valid access token
+    And the header "x-correlator" is set to a UUID value
 
-  # Sunny day scenarios
+    # Success scenarios
 
+  @session_insights_retrieveSessions_01_phone_number_2legged_token
   Scenario: Retrieve sessions for device with phoneNumber using 2-legged token
-    Given I have a 2-legged access token
-    And I have created multiple sessions for device with phoneNumber
-    When I send POST request to "/retrieve-sessions" with device phoneNumber
-    Then I receive a 200 response
-    And the response contains an array of sessions
-    And all sessions in the array belong to the specified device
-    And each session contains required properties (id, device, applicationServer, protocol, sink, subscribedEventTypes, startTime)
-    And the response headers contain "x-correlator"
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And multiple existing sessions for a device with phoneNumber
+    And the request body property "$.device.phoneNumber" is set to that device phoneNumber
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 200
+    And the response header "Content-Type" is "application/json"
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response body complies with the OAS schema at "/components/schemas/RetrieveSessionsOutput"
+    And the response property "$" is an array
+    And each item in the response array complies with the OAS schema at "/components/schemas/Session"
+    And all sessions in the response belong to the specified device
 
+  @session_insights_retrieveSessions_02_ipv4_address_2legged_token
   Scenario: Retrieve sessions for device with IPv4 address using 2-legged token
-    Given I have a 2-legged access token
-    And I have created sessions for device with IPv4 address
-    When I send POST request to "/retrieve-sessions" with device IPv4 address
-    Then I receive a 200 response
-    And the response contains an array of sessions
-    And all sessions belong to the device with specified IPv4 address
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And existing sessions for a device with IPv4 address
+    And the request body property "$.device.ipv4Address" is set to that device IPv4 address
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 200
+    And the response header "Content-Type" is "application/json"
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And all sessions in the response belong to the device with specified IPv4 address
 
+  @session_insights_retrieveSessions_03_ipv6_address_2legged_token
   Scenario: Retrieve sessions for device with IPv6 address using 2-legged token
-    Given I have a 2-legged access token
-    And I have created sessions for device with IPv6 address
-    When I send POST request to "/retrieve-sessions" with device IPv6 address
-    Then I receive a 200 response
-    And the response contains an array of sessions
-    And all sessions belong to the device with specified IPv6 address
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And existing sessions for a device with IPv6 address
+    And the request body property "$.device.ipv6Address" is set to that device IPv6 address
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 200
+    And the response header "Content-Type" is "application/json"
+    And all sessions in the response belong to the device with specified IPv6 address
 
+  @session_insights_retrieveSessions_04_network_access_identifier_2legged_token
   Scenario: Retrieve sessions for device with networkAccessIdentifier using 2-legged token
-    Given I have a 2-legged access token
-    And I have created sessions for device with networkAccessIdentifier
-    When I send POST request to "/retrieve-sessions" with device networkAccessIdentifier
-    Then I receive a 200 response
-    And the response contains an array of sessions
-    And all sessions belong to the device with specified networkAccessIdentifier
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And existing sessions for a device with networkAccessIdentifier
+    And the request body property "$.device.networkAccessIdentifier" is set to that device networkAccessIdentifier
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 200
+    And the response header "Content-Type" is "application/json"
+    And all sessions in the response belong to the device with specified networkAccessIdentifier
 
+  @session_insights_retrieveSessions_05_3legged_token_without_device
   Scenario: Retrieve sessions using 3-legged token without device parameter
-    Given I have a 3-legged access token for a specific device
-    And I have created sessions for the authenticated device
-    When I send POST request to "/retrieve-sessions" without device parameter
-    Then I receive a 200 response
-    And the response contains an array of sessions
-    And all sessions belong to the authenticated device
+    Given the header "Authorization" is set to a valid 3-legged access token for a specific device
+    And existing sessions for the authenticated device
+    And the request body does not include "$.device" property
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 200
+    And the response header "Content-Type" is "application/json"
+    And all sessions in the response belong to the authenticated device
 
+  @session_insights_retrieveSessions_06_empty_array_no_sessions
   Scenario: Retrieve empty array when device has no sessions
-    Given I have a 2-legged access token
-    And I have a device with phoneNumber that has no sessions
-    When I send POST request to "/retrieve-sessions" with device phoneNumber
-    Then I receive a 200 response
-    And the response contains an empty array
-    And the response headers contain "x-correlator"
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And a device with phoneNumber that has no existing sessions
+    And the request body property "$.device.phoneNumber" is set to that device phoneNumber
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 200
+    And the response header "Content-Type" is "application/json"
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response property "$" is an empty array
 
+  @session_insights_retrieveSessions_07_different_protocol_types
   Scenario: Retrieve sessions including different protocol types
-    Given I have a 2-legged access token
-    And I have created HTTP sessions for a device
-    And I have created MQTT3 sessions for the same device
-    And I have created MQTT5 sessions for the same device
-    When I send POST request to "/retrieve-sessions" with device identifier
-    Then I receive a 200 response
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And existing HTTP, MQTT3, and MQTT5 sessions for a device
+    And the request body property "$.device.phoneNumber" is set to that device phoneNumber
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 200
     And the response contains sessions with different protocol types
     And each session contains appropriate protocol-specific properties
 
-  Scenario: Retrieve sessions including sessions with different states
-    Given I have a 2-legged access token
-    And I have active sessions for a device
-    And I have expired sessions for the same device
-    When I send POST request to "/retrieve-sessions" with device identifier
-    Then I receive a 200 response
-    And the response includes all sessions regardless of state
-    And each session shows its current state information
-
-  # Rainy day scenarios - Request validation
-
-  Scenario: Retrieve sessions with 2-legged token but no device parameter
-    Given I have a 2-legged access token
-    And I do not provide device information in the request
-    When I send POST request to "/retrieve-sessions" without device parameter
-    Then I receive a 422 response
-    And the response contains error code "MISSING_IDENTIFIER"
-    And the response headers contain "x-correlator"
-
-  Scenario: Retrieve sessions with 3-legged token and device parameter
-    Given I have a 3-legged access token
-    And I provide device information in the request
-    When I send POST request to "/retrieve-sessions" with device parameter
-    Then I receive a 422 response
-    And the response contains error code "UNNECESSARY_IDENTIFIER"
-    And the response headers contain "x-correlator"
-
-  Scenario: Retrieve sessions with invalid device phoneNumber format
-    Given I have a 2-legged access token
-    And I provide device with invalid phoneNumber "invalid-phone"
-    When I send POST request to "/retrieve-sessions" with invalid phoneNumber
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
-
-  Scenario: Retrieve sessions with invalid device IPv4 address format
-    Given I have a 2-legged access token
-    And I provide device with invalid IPv4 address "999.999.999.999"
-    When I send POST request to "/retrieve-sessions" with invalid IPv4 address
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
-
-  Scenario: Retrieve sessions with invalid device IPv6 address format
-    Given I have a 2-legged access token
-    And I provide device with invalid IPv6 address "invalid-ipv6"
-    When I send POST request to "/retrieve-sessions" with invalid IPv6 address
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
-
-  Scenario: Retrieve sessions with device having no identifiers
-    Given I have a 2-legged access token
-    And I provide device object with no identifiers
-    When I send POST request to "/retrieve-sessions" with empty device
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
-
+  @session_insights_retrieveSessions_08_multiple_device_identifiers
   Scenario: Retrieve sessions with device having multiple identifiers
-    Given I have a 2-legged access token
-    And I provide device object with both phoneNumber and IPv4 address
-    When I send POST request to "/retrieve-sessions" with multiple identifiers
-    Then I receive a 200 response
-    And the response contains sessions for the device
-    And the response device object contains only one identifier
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the request body property "$.device.phoneNumber" is set to a valid phoneNumber
+    And the request body property "$.device.ipv4Address" is set to a valid IPv4 address
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 200
+    And the response device objects contain only one identifier property
 
-  # Error scenarios - HTTP method and content type
+    # Errors 400
 
-  Scenario: Use GET method instead of POST
-    Given I have a valid access token
-    When I send GET request to "/retrieve-sessions"
-    Then I receive a 405 response
-    And the response contains error indicating method not allowed
+  @session_insights_retrieveSessions_400.1_invalid_phone_number_format
+  Scenario: Invalid phoneNumber format
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the request body property "$.device.phoneNumber" is set to "invalid-phone"
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Retrieve sessions with invalid Content-Type
-    Given I have a 2-legged access token
-    And I have valid device information
-    And I set Content-Type to "text/plain"
-    When I send POST request to "/retrieve-sessions" with invalid content type
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_retrieveSessions_400.2_invalid_ipv4_address_format
+  Scenario: Invalid IPv4 address format
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the request body property "$.device.ipv4Address.publicAddress" is set to "999.999.999.999"
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Retrieve sessions with malformed JSON
-    Given I have a 2-legged access token
-    And I have malformed JSON in the request body
-    When I send POST request to "/retrieve-sessions" with malformed JSON
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_retrieveSessions_400.3_invalid_ipv6_address_format
+  Scenario: Invalid IPv6 address format
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the request body property "$.device.ipv6Address" is set to "invalid-ipv6"
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  # Error scenarios - Authorization and permissions
+  @session_insights_retrieveSessions_400.4_device_no_identifiers
+  Scenario: Device object with no identifiers
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the request body property "$.device" is set to an empty object
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Retrieve sessions without authentication
-    Given I do not have an access token
-    And I have valid device information
-    When I send POST request to "/retrieve-sessions" without authentication
-    Then I receive a 401 response
-    And the response contains error code "UNAUTHENTICATED"
+  @session_insights_retrieveSessions_400.5_invalid_content_type
+  Scenario: Invalid Content-Type header
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the header "Content-Type" is set to "text/plain"
+    And a valid device identifier in the request body
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Retrieve sessions with invalid access token
-    Given I have an invalid access token
-    And I have valid device information
-    When I send POST request to "/retrieve-sessions" with invalid authentication
-    Then I receive a 401 response
-    And the response contains error code "UNAUTHENTICATED"
+  @session_insights_retrieveSessions_400.6_malformed_json
+  Scenario: Malformed JSON in request body
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the request body is set to malformed JSON
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Retrieve sessions without sufficient permissions
-    Given I have an access token without required scopes
-    And I have valid device information
-    When I send POST request to "/retrieve-sessions" with insufficient permissions
-    Then I receive a 403 response
-    And the response contains error code indicating insufficient permissions
+    # Generic 401 errors
 
-  Scenario: Retrieve sessions for device not belonging to authenticated user
-    Given I have a 3-legged access token for user A
-    And I have device information for user B
-    When I send POST request to "/retrieve-sessions" for other user's device
-    Then I receive a 403 response
-    And the response contains error code indicating insufficient permissions
+  @session_insights_retrieveSessions_401.1_no_authorization_header
+  Scenario: Error response for no header "Authorization"
+    Given the header "Authorization" is not sent
+    And a valid device identifier in the request body
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 401
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 401
+    And the response property "$.code" is "UNAUTHENTICATED"
+    And the response property "$.message" contains a user friendly text
 
-  # Error scenarios - Device not found
+  @session_insights_retrieveSessions_401.2_expired_access_token
+  Scenario: Error response for expired access token
+    Given the header "Authorization" is set to an expired access token
+    And a valid device identifier in the request body
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 401
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 401
+    And the response property "$.code" is "UNAUTHENTICATED"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Retrieve sessions for non-existent device
-    Given I have a 2-legged access token
-    And I have a valid but non-existent device phoneNumber
-    When I send POST request to "/retrieve-sessions" with non-existent device
-    Then I receive a 404 response
-    And the response contains error code indicating device not found
-    And the response headers contain "x-correlator"
+  @session_insights_retrieveSessions_401.3_invalid_access_token
+  Scenario: Error response for invalid access token
+    Given the header "Authorization" is set to an invalid access token
+    And a valid device identifier in the request body
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 401
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 401
+    And the response property "$.code" is "UNAUTHENTICATED"
+    And the response property "$.message" contains a user friendly text
 
-  # Rate limiting scenarios
+    # Generic 403 errors
 
-  Scenario: Retrieve sessions with rate limiting exceeded
-    Given I have a valid access token
-    And I have exceeded the rate limit for this endpoint
-    When I send POST request to "/retrieve-sessions" exceeding rate limit
-    Then I receive a 429 response
-    And the response contains error code "TOO_MANY_REQUESTS" or "QUOTA_EXCEEDED"
-    And the response headers contain "x-correlator"
+  @session_insights_retrieveSessions_403.1_missing_access_token_scope
+  Scenario: Missing access token scope
+    Given the header "Authorization" is set to an access token that does not include the required scope
+    And a valid device identifier in the request body
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 403
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 403
+    And the response property "$.code" is "PERMISSION_DENIED"
+    And the response property "$.message" contains a user friendly text
 
-  # x-correlator header validation
+  @session_insights_retrieveSessions_403.2_device_access_denied
+  Scenario: Device not accessible by the API client given in the access token
+    Given the header "Authorization" is set to a valid 3-legged access token for user A
+    And the request body property "$.device.phoneNumber" is set to a device belonging to user B
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 403
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 403
+    And the response property "$.code" is "PERMISSION_DENIED"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Retrieve sessions with valid x-correlator header
-    Given I have a 2-legged access token
-    And I have valid device information
-    And I provide a valid x-correlator header
-    When I send POST request to "/retrieve-sessions" with correlator
-    Then I receive a 200 response
-    And the response headers contain the same x-correlator value
+    # Errors 404
 
-  Scenario: Retrieve sessions with invalid x-correlator header format
-    Given I have a 2-legged access token
-    And I have valid device information
-    And I provide an invalid x-correlator header with special characters
-    When I send POST request to "/retrieve-sessions" with invalid correlator
-    Then I receive a 400 response
-    And the response contains error code "INVALID_ARGUMENT"
+  @session_insights_retrieveSessions_404.1_device_not_found
+  Scenario: Device not found
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the request body property "$.device.phoneNumber" is set to a valid but non-existent phoneNumber
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 404
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 404
+    And the response property "$.code" is "NOT_FOUND"
+    And the response property "$.message" contains a user friendly text
 
-  # Response schema validation
+    # Errors 422
 
-  Scenario: Verify response schema compliance for session array
-    Given I have a 2-legged access token
-    And I have created sessions for a device
-    When I send POST request to "/retrieve-sessions" with device identifier
-    Then I receive a 200 response
-    And the response body complies with RetrieveSessionsOutput schema
-    And the response is an array of Session objects
-    And each session object contains all required properties
-    And all property types match the specification
+  @session_insights_retrieveSessions_422.1_2legged_token_missing_device
+  Scenario: 2-legged token used without device parameter
+    Given the header "Authorization" is set to a valid 2-legged access token
+    And the request body does not include "$.device" property
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 422
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 422
+    And the response property "$.code" is "MISSING_IDENTIFIER"
+    And the response property "$.message" contains a user friendly text
 
-  # Edge cases and filtering
+  @session_insights_retrieveSessions_422.2_3legged_token_with_device
+  Scenario: 3-legged token used with device parameter
+    Given the header "Authorization" is set to a valid 3-legged access token
+    And the request body property "$.device.phoneNumber" is set to a valid phoneNumber
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 422
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 422
+    And the response property "$.code" is "UNNECESSARY_IDENTIFIER"
+    And the response property "$.message" contains a user friendly text
 
-  Scenario: Retrieve large number of sessions for device
-    Given I have a 2-legged access token
-    And I have created many sessions (50+) for a device
-    When I send POST request to "/retrieve-sessions" with device identifier
-    Then I receive a 200 response
-    And the response contains all sessions for the device
-    And the response time is reasonable
+    # Errors 429
 
-  Scenario: Retrieve sessions with various applicationSessionIds
-    Given I have a 2-legged access token
-    And I have created sessions with different applicationSessionIds for a device
-    When I send POST request to "/retrieve-sessions" with device identifier
-    Then I receive a 200 response
-    And each session shows its respective applicationSessionId
-
-  Scenario: Retrieve sessions created at different times
-    Given I have a 2-legged access token
-    And I have created sessions at different times for a device
-    When I send POST request to "/retrieve-sessions" with device identifier
-    Then I receive a 200 response
-    And sessions are returned with their respective creation timestamps
-    And sessions may be ordered by creation time
-
-  # Content negotiation
-
-  Scenario: Retrieve sessions with unsupported Accept header
-    Given I have a 2-legged access token
-    And I have valid device information
-    And I set Accept header to "text/xml"
-    When I send POST request to "/retrieve-sessions" with unsupported Accept
-    Then I receive a 406 response
-    And the response contains error indicating unsupported media type
+  @session_insights_retrieveSessions_429.1_rate_limit_exceeded
+  Scenario: Rate limit exceeded
+    Given the header "Authorization" is set to a valid access token
+    And the rate limit for this endpoint has been exceeded
+    And a valid device identifier in the request body
+    When the request "retrieveSessionsByDevice" is sent
+    Then the response status code is 429
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 429
+    And the response property "$.code" is "TOO_MANY_REQUESTS"
+    And the response property "$.message" contains a user friendly text
