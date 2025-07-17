@@ -14,7 +14,7 @@ Feature: CAMARA Session Insights API, v0.1.0-rc.1 - Operation retrieveSessionsBy
 
   Background: Common retrieveSessionsByDevice setup
     Given an environment at "apiRoot"
-    And the resource "/session-insights/vwip/retrieve-sessions"
+    And the resource "/session-insights/v0.1rc1/retrieve-sessions"
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
     And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"

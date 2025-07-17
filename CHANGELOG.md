@@ -19,14 +19,14 @@ The below sections record the changes for each API version in each release as fo
 
 This release contains the definition and documentation of
 
-- session-insights v0.1.0
+- session-insights v0.1.0-rc.1
 
 The API definition(s) are based on
 
 - Commonalities v0.6.0
 - Identity and Consent Management v0.4.0
 
-## session-insights v0.1.0
+## session-insights v0.1.0-rc.1
 
 **Initial contribution of Session Insights API definition, including initial documentation, linting, test cases, and OpenAPI spec.**
 

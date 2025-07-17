@@ -16,7 +16,7 @@ Feature: CAMARA Session Insights API, v0.1.0-rc.1 - Operation deleteSession
 
   Background: Common deleteSession setup
     Given an environment at "apiRoot"
-    And the resource "/session-insights/vwip/sessions/{sessionId}"
+    And the resource "/session-insights/v0.1rc1/sessions/{sessionId}"
     And the header "Authorization" is set to a valid access token
     And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"
     And the path parameter "sessionId" is set by default to an existing session sessionId

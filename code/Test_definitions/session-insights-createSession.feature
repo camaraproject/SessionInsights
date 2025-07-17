@@ -16,7 +16,7 @@ Feature: CAMARA Session Insights API, v0.1.0-rc.1 - Operation createSession
 
   Background: Common createSession setup
     Given an environment at "apiRoot"
-    And the resource "/session-insights/vwip/sessions"
+    And the resource "/session-insights/v0.1rc1/sessions"
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
     And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"
