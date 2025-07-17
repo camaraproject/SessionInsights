@@ -20,7 +20,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
     And the resource "/session-insights/vwip/sessions/{sessionId}/metrics"
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
-    And the header "x-correlator" is set to a UUID value
+    And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"
     And the path parameter "sessionId" is set by default to an existing active session sessionId
 
     # Success scenarios
