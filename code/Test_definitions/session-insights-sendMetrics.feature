@@ -1,4 +1,4 @@
-Feature: CAMARA Session Insights API, v0.1.0-rc.1 - Operation sendSessionMetrics
+Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
     # Input to be provided by the implementation to the tester
     #
     # Implementation indications:

@@ -1,4 +1,4 @@
-Feature: CAMARA Session Insights API, v0.1.0-rc.1 - Operation getSession
+Feature: CAMARA Session Insights API, vwip - Operation getSession
     # Input to be provided by the implementation to the tester
     #
     # Implementation indications:
