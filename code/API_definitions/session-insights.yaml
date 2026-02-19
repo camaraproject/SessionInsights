@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Session Insights API
-  version: wip
+  version: 0.1.0-rc.1
   x-camara-commonalities: 0.6
   license:
     name: Apache 2.0
@@ -65,7 +65,7 @@ externalDocs:
   url: https://github.com/camaraproject/SessionInsights
 
 servers:
-  - url: "{apiRoot}/session-insights/vwip"
+  - url: "{apiRoot}/session-insights/v0.1rc1"
     variables:
       apiRoot:
         default: http://localhost:9091
