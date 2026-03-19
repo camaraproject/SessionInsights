@@ -1,13 +1,13 @@
 openapi: 3.0.3
 info:
-  title: Session Insights API
+  title: Session Insights
   version: wip
   x-camara-commonalities: 0.6
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   description: |
-    The Session Insights API is part of the CAMARA Connectivity Insights family. It extends the capabilities of the Connectivity Insights API by enabling applications to continuously monitor and evaluate their real-time session quality, based on observed KPIs and network operator feedback.
+    The Session Insights API is part of the CAMARA Connectivity Insights API group. It extends the capabilities of the Connectivity Insights API by enabling applications to continuously monitor and evaluate their real-time session quality, based on observed KPIs and network operator feedback.
 
     While the Connectivity Insights API allows applications to query whether a network can meet predefined performance thresholds (e.g., jitter, packet loss, bitrate), the Session Insights API supports the lifecycle of an ongoing session. It allows applications to stream KPI metrics to the network operator, receive dynamic scoring on current session performance, and engage in adaptive optimization strategies.
 
@@ -21,7 +21,7 @@ info:
     - Request network service improvements using complementary CAMARA APIs (e.g., QualityOnDemand, NetworkAccessManagement).
     - Gracefully terminate the session when monitoring is no longer needed.
 
-    # Application Profile Integration
+    # Use of Application Profiles API
 
     This API leverages CAMARA’s [Application Profiles](https://github.com/camaraproject/ApplicationProfiles) to define threshold criteria for session quality. The Application Profile specifies the application's expected network performance requirements and is referenced when creating a session.
 
@@ -61,7 +61,7 @@ info:
     As a specific rule, error `501 - NOT_IMPLEMENTED` can be only a possible error response if it is explicitly documented in the API.
 
 externalDocs:
-  description: Project documentation at Camara
+  description: Project documentation at CAMARA
   url: https://github.com/camaraproject/SessionInsights
 
 servers:
@@ -74,11 +74,11 @@ servers:
           `api.example.com` or `api.example.com/somepath`
 
 tags:
-  - name: Network Quality
+  - name: Session Insights
     description: |
       Manage the lifecycle of real-time monitoring sessions between an application and the network.
-      Applications can stream KPIs, receive session scores and RCA events, and take actions based on
-      current session quality and network conditions.
+      Applications can stream KPIs, receive session scores and event notifications, and take actions
+      based on current session quality and network conditions.
 
 
 paths:
