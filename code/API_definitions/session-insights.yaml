@@ -13,7 +13,7 @@ info:
 
     # Key Features
 
-    - Create a monitoring session using a selected Application Profile (obtained via GET application-profiles).
+    - Create a monitoring session using a selected Application Profile identifier (obtained via GET application-profiles).
     - Send application-level KPIs (e.g., latency, jitter, throughput, loss) to the API provider.
     - Receive a Session Insights Score reflecting the API provider's evaluation of session quality.
     - Respond to events and adjust application configuration.
