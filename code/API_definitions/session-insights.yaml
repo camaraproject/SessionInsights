@@ -7,34 +7,48 @@ info:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   description: |
-    The Session Insights API is part of the CAMARA Connectivity Insights API group. It extends the capabilities of the Connectivity Insights API by enabling applications to continuously monitor and evaluate their real-time session quality, based on observed KPIs and network operator feedback.
+    The Session Insights API is part of the CAMARA Connectivity Insights API group. It extends the capabilities of the Connectivity Insights API by enabling applications to continuously monitor and evaluate their real-time session quality, based on application observed KPIs and API provider feedback.
 
-    While the Connectivity Insights API allows applications to query whether a network can meet predefined performance thresholds (e.g., jitter, packet loss, bitrate), the Session Insights API supports the lifecycle of an ongoing session. It allows applications to stream KPI metrics to the network operator, receive dynamic scoring on current session performance, and engage in adaptive optimization strategies.
+    While the Connectivity Insights API allows applications to query whether a network can meet predefined performance thresholds (e.g., jitter, packet loss, bitrate), the Session Insights API supports the lifecycle of an ongoing session. It allows applications to stream KPIs to the API provider, receive dynamic scoring on current session performance, and engage in adaptive optimization strategies.
 
     # Key Features
 
-    - Create a monitoring session using an existing Application Profile.
-    - Send application-level KPIs (e.g., latency, jitter, throughput, loss) to the network operator.
-    - Receive a Session Insights Score reflecting network-evaluated session quality.
+    - Create a monitoring session using a selected Application Profile identifier (obtained via GET application-profiles as defined in the CAMARA ApplicationProfiles project).
+    - Send application-level KPIs (e.g., latency, jitter, throughput, loss) to the API provider.
+    - Receive a Session Insights Score reflecting the API provider's evaluation of session quality.
     - Respond to events and adjust application configuration.
-    - Receive notifications and root cause analysis (RCA) when session quality degrades.
+    - Receive notifications and root cause analysis when session quality degrades.
     - Request network service improvements using complementary CAMARA APIs (e.g., QualityOnDemand, NetworkAccessManagement).
     - Gracefully terminate the session when monitoring is no longer needed.
 
     # Use of Application Profiles API
 
-    This API leverages CAMARA’s [Application Profiles](https://github.com/camaraproject/ApplicationProfiles) to define threshold criteria for session quality. The Application Profile specifies the application's expected network performance requirements and is referenced when creating a session.
+    This API leverages CAMARA’s [Application Profiles](https://github.com/camaraproject/ApplicationProfiles) to define threshold criteria for session quality. A selected Application Profile (obtained via the Application Profiles API) specifies the application’s expected network performance requirements and is referenced when creating a session.
+
+    # Session Identifiers
+
+    The API uses three distinct identifiers for sessions:
+
+    - **`sessionId`** (path parameter): The operator-assigned unique identifier for the session, used in all path-based operations (e.g., GET /sessions/{sessionId}). This is assigned by the API provider when the session is created.
+    - **`id`** (property of session objects): Same as `sessionId` — the operator-assigned session identifier, returned within session response objects.
+    - **`applicationSessionId`** (optional property): An application-provided reference (e.g., a meeting ID, match ID, or stream ID) used for correlation between the application and the API provider. This is set by the API consumer during session creation.
+
+    # Object Relationships
+
+    - One **device** can have multiple active sessions (e.g., a phone running both a video call and a game stream).
+    - One **application** is associated with one **Application Profile** per session, which defines the KPI thresholds for that session.
+    - One **application** can create multiple sessions across different devices or for different use cases.
 
     # Example Use Cases
 
     ## Wi-Fi Congestion Mitigation
     - Application sets thresholds for latency and packet loss.
-    - Session score drops due to congestion, triggering an RCA event.
-    - RCA identifies local Wi-Fi congestion; application adjusts QoS policies (e.g., enables WMM) to prioritize traffic.
+    - Session score drops due to congestion, triggering an event to diagnosed the problem and suggest corrective action.
+    - Root cause analysis identifies local Wi-Fi congestion; application adjusts QoS policies (e.g., enables Wi-Fi Multimedia (WMM) prioritization) to prioritize traffic.
 
     ## Access Network Impairment
     - Degraded score attributed to poor signal or congestion in the access network.
-    - Application requests service enhancement through APIs like QualityOnDemand or NetworkAccessManagement.
+    - Application requests service enhancement through complementary CAMARA APIs (e.g., QualityOnDemand, NetworkAccessManagement).
 
     # Authorization and Authentication
 
@@ -46,11 +60,10 @@ info:
 
     ## Identifying the device from the access token
 
-    This API requires the API consumer to identify a device as the subject of the API as follows:
-    - When the API is invoked using a two-legged access token, the subject will be identified from the optional `device` object, which therefore MUST be provided.
-    - When a three-legged access token is used however, this optional identifier MUST NOT be provided, as the subject will be uniquely identified from the access token.
+    - **Three-legged access token** (end-user authentication): The device is automatically identified from the access token — the end user authenticated directly, so the API provider already knows which device is involved. The `device` parameter MUST NOT be provided.
+    - **Two-legged access token** (server-to-server): The access token does not identify a specific end user, so the API consumer MUST provide the `device` object in the request to indicate which device the session applies to.
 
-    This approach simplifies API usage for API consumers using a three-legged access token to invoke the API by relying on the information that is associated with the access token and was identified during the authentication process.
+    This approach simplifies API usage for consumers using three-legged tokens by relying on the identity already established during the authentication process.
 
     ## Error handling:
 
@@ -60,11 +73,15 @@ info:
 
     # Additional CAMARA error responses
 
-    The list of error codes in this API specification is not exhaustive. Therefore the API specification may not document some non-mandatory error statuses as indicated in `CAMARA API Design Guide`.
+    In addition to the error responses documented for each operation in this API, the following common CAMARA error patterns may also apply:
 
-    Please refer to the `CAMARA_common.yaml` of the Commonalities Release associated to this API version for a complete list of error responses. The applicable Commonalities Release can be identified in the `API Readiness Checklist` document associated to this API version.
+    - `400 INVALID_ARGUMENT` — A required field is missing or a parameter value is out of range.
+    - `401 UNAUTHENTICATED` — The access token is missing, expired, or invalid.
+    - `403 PERMISSION_DENIED` — The API consumer does not have permission to perform the requested operation.
+    - `429 TOO_MANY_REQUESTS` — The API consumer has exceeded the rate limit.
+    - `501 NOT_IMPLEMENTED` — The requested operation is not supported by this API provider. This error is only returned if it is explicitly documented for the specific operation.
 
-    As a specific rule, error `501 - NOT_IMPLEMENTED` can be only a possible error response if it is explicitly documented in the API.
+    This list is not exhaustive. Please refer to `CAMARA_common.yaml` of the Commonalities release associated with this API version for a complete list. The applicable Commonalities release can be identified in the `API Readiness Checklist` document.
 
 externalDocs:
   description: Project documentation at CAMARA
@@ -96,13 +113,13 @@ paths:
       description: |
         Create a new session for monitoring application performance and network
         quality. The session can be used to stream KPIs, receive session
-        scores, and handle RCA events.
+        scores, and handle root cause analysis events.
 
-        The session is created under an existing Application Profile, which
+        The session is created using a selected Application Profile, which
         defines the expected performance thresholds and other parameters.
 
-        The operator allocates a sink (HTTP webhook or MQTT topic) for the
-        application to send metrics and receive notifications.
+        The API provider allocates a sink (HTTP webhook or MQTT topic) for the
+        application to send KPIs and receive notifications.
       operationId: createSession
       security:
         - openId:
@@ -269,7 +286,7 @@ paths:
       summary: Send session metrics
       description: |
         Stream application-level KPIs (e.g., latency, jitter, throughput, loss)
-        to the network operator for the specified session. This is used to
+        to the API provider for the specified session. This is used to
         evaluate session quality and trigger notifications if thresholds are
         breached.
       operationId: sendSessionMetrics
@@ -342,12 +359,12 @@ components:
 
     SessionRequest:
       description: |
-        Request body for creating a new session. The session is created under
-        an existing Application Profile, which defines the expected
+        Request body for creating a new session. The session is created using
+        a selected Application Profile, which defines the expected
         performance thresholds and other parameters.
 
-        The operator allocates a sink (HTTP webhook or MQTT topic) for the
-        application to send metrics and receive notifications.
+        The API provider allocates a sink (HTTP webhook or MQTT topic) for the
+        application to send KPIs and receive notifications.
       type: object
       properties:
         applicationProfileId:
@@ -949,14 +966,14 @@ components:
         - message
 
     RetrieveSessionsInput:
-      description: Parameters to get QoS session information by device
+      description: Parameters to retrieve Session Insights sessions by device
       type: object
       properties:
         device:
           $ref: "#/components/schemas/Device"
 
     RetrieveSessionsOutput:
-      description: QoS session information for a given device
+      description: Session Insights session information for a given device
       type: array
       items:
         $ref: "#/components/schemas/Session"
