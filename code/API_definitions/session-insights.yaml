@@ -43,7 +43,7 @@ info:
 
     ## Wi-Fi Congestion Mitigation
     - Application sets thresholds for latency and packet loss.
-    - Session score drops due to congestion, triggering an event indicating the problem cause.
+    - Session score drops due to congestion, triggering an event to diagnosed the problem and suggest corrective action.
     - Root cause analysis identifies local Wi-Fi congestion; application adjusts QoS policies (e.g., enables Wi-Fi Multimedia (WMM) prioritization) to prioritize traffic.
 
     ## Access Network Impairment
