@@ -964,7 +964,7 @@ components:
                 code: INVALID_ARGUMENT
                 message: Client specified an invalid argument, request body or query param.
 
-Generic401:
+    Generic401:
       description: Unauthorized
       headers:
         x-correlator:
