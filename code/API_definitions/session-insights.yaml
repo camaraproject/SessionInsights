@@ -956,7 +956,6 @@ components:
                   code:
                     enum:
                       - INVALID_ARGUMENT
-                      - OUT_OF_RANGE
           examples:
             GENERIC_400_INVALID_ARGUMENT:
               description: Invalid Argument. Generic Syntax Exception
