@@ -52,7 +52,7 @@ info:
 
     # Authorization and Authentication
 
-    The Session Insights API monitors network quality for a specific device. The API provider needs to know which device the session relates to, and this is determined by the type of access token used:
+    The Session Insights API monitors network quality from an application running on a specific device. The API provider needs to know which device the session relates to, and this is determined by the type of access token used:
 
     ## Identifying the device from the access token
 
