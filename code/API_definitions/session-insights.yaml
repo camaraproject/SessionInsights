@@ -117,9 +117,6 @@ paths:
 
         The session is created using a selected Application Profile, which
         defines the expected performance thresholds and other parameters.
-
-        The API provider allocates a sink (HTTP webhook or MQTT topic) for the
-        application to send KPIs and receive notifications.
       operationId: createSession
       security:
         - openId:
@@ -147,7 +144,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateSessionResponse"
         "400":
-          $ref: "#/components/responses/BadRequest400"
+          $ref: "#/components/responses/CreateSessionBadRequest400"
         "401":
           $ref: "#/components/responses/Generic401"
         "403":
@@ -156,6 +153,8 @@ paths:
           $ref: "#/components/responses/Conflict409"
         "422":
           $ref: "#/components/responses/Generic422"
+        "429":
+          $ref: "#/components/responses/Generic429"
 
   /sessions/{sessionId}:
     get:
@@ -267,7 +266,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RetrieveSessionsOutput"
         "400":
-          $ref: "#/components/responses/BadRequest400"
+          $ref: "#/components/responses/Generic400"
         "401":
           $ref: "#/components/responses/Generic401"
         "403":
@@ -314,7 +313,7 @@ paths:
             x-correlator:
               $ref: "#/components/headers/x-correlator"
         "400":
-          $ref: "#/components/responses/BadRequest400"
+          $ref: "#/components/responses/Generic400"
         "401":
           $ref: "#/components/responses/Generic401"
         "403":
@@ -362,9 +361,6 @@ components:
         Request body for creating a new session. The session is created using
         a selected Application Profile, which defines the expected
         performance thresholds and other parameters.
-
-        The API provider allocates a sink (HTTP webhook or MQTT topic) for the
-        application to send KPIs and receive notifications.
       type: object
       properties:
         applicationProfileId:
@@ -381,15 +377,18 @@ components:
         protocol:
           $ref: "#/components/schemas/Protocol"
         types:
+          description: |
+            Event types to subscribe to. At least one event type must be specified.
           type: array
+          minItems: 1
           items:
-            $ref: "#/components/schemas/EventType"
+            $ref: "#/components/schemas/SubscriptionEventType"
       required:
         - applicationProfileId
         - device
         - applicationServer
         - protocol
-        - subscribedEventTypes
+        - types
 
     SessionBase:
       type: object
@@ -411,26 +410,32 @@ components:
         sink:
           type: string
           description: |
-            • HTTP → webhook URL (from request)
-            • MQTT → quality topic (allocated by operator)
-        subscribedEventTypes:
+            The notification endpoint address.
+            For HTTP protocol, this is the webhook URL provided in the request.
+            For MQTT protocol, this is the quality topic allocated by the operator.
+        types:
           type: array
           items:
-            $ref: "#/components/schemas/EventType"
-        startTime:
+            $ref: "#/components/schemas/SubscriptionEventType"
+        startsAt:
           type: string
           format: date-time
+          description: The date and time when the session became active.
         expiresAt:
           type: string
           format: date-time
+          description: The date and time when the session will expire.
+        status:
+          $ref: "#/components/schemas/SubscriptionStatus"
       required:
         - id
         - device
         - applicationServer
         - protocol
         - sink
-        - subscribedEventTypes
-        - startTime
+        - types
+        - startsAt
+        - status
 
     HTTPSettings:
       type: object
@@ -469,10 +474,16 @@ components:
           properties:
             sink:
               type: string
-              description: Webhook URL for event delivery
+              format: uri
+              pattern: ^https:\/\/.+$
+              description: |
+                The address to which events shall be delivered using the HTTP protocol.
+                Must be HTTPS.
+              example: "https://endpoint.example.com/sink"
             sinkCredential:
-              type: string
-              description: Optional credential for HTTP callbacks
+              description: A sink credential provides authentication or authorization information necessary to enable delivery of events to a target.
+              allOf:
+                - $ref: "#/components/schemas/SinkCredential"
           required:
             - sink
 
@@ -482,8 +493,9 @@ components:
         - type: object
           properties:
             sinkCredential:
-              type: string
-              description: Credential for MQTT broker access
+              description: Credential for MQTT broker access.
+              allOf:
+                - $ref: "#/components/schemas/SinkCredential"
 
     HTTPSession:
       allOf:
@@ -517,28 +529,13 @@ components:
       discriminator:
         propertyName: protocol
 
-    CreateHTTPSession:
-      allOf:
-        - $ref: "#/components/schemas/HTTPSession"
-        - type: object
-          properties:
-            sinkCredential:
-              type: string
-              description: Returned only on creation (HTTP)
-
-    CreateMQTTSession:
-      allOf:
-        - $ref: "#/components/schemas/MQTTSession"
-        - type: object
-          properties:
-            sinkCredential:
-              type: string
-              description: Broker credential (creation only)
-
     CreateSessionResponse:
+      description: |
+        Response for session creation. Note that sinkCredential is not
+        returned in responses for security reasons.
       oneOf:
-        - $ref: "#/components/schemas/CreateHTTPSession"
-        - $ref: "#/components/schemas/CreateMQTTSession"
+        - $ref: "#/components/schemas/HTTPSession"
+        - $ref: "#/components/schemas/MQTTSession"
       discriminator:
         propertyName: protocol
 
@@ -694,13 +691,28 @@ components:
         - MQTT3
         - MQTT5
 
-    EventType:
+    SubscriptionEventType:
       type: string
+      description: |
+        The type of event subscribed to. Following the CAMARA event naming
+        convention: org.camaraproject.<api-name>.<event-version>.<event-name>
       enum:
         - org.camaraproject.session-insights.v0.quality-score
         - org.camaraproject.session-insights.v0.network-event
         - org.camaraproject.session-insights.v0.proposed-resolution
-        - org.camaraproject.session-insights.v0.subscription-ends
+        - org.camaraproject.session-insights.v0.subscription-ended
+        - org.camaraproject.session-insights.v0.subscription-started
+        - org.camaraproject.session-insights.v0.subscription-updated
+
+    SubscriptionStatus:
+      type: string
+      description: The status of the subscription.
+      enum:
+        - ACTIVATION_REQUESTED
+        - ACTIVE
+        - INACTIVE
+        - EXPIRED
+        - DELETED
 
     # ---------- CloudEvents & data payloads ----------
     CloudEvent:
@@ -715,7 +727,7 @@ components:
         source:
           type: string
         type:
-          $ref: "#/components/schemas/EventType"
+          $ref: "#/components/schemas/SubscriptionEventType"
         time:
           type: string
           format: date-time
@@ -820,11 +832,58 @@ components:
         - resolutionType
         - description
 
-    SubscriptionEndsData:
+    SubscriptionEndedData:
       type: object
+      description: Data payload for subscription-ended event.
       properties:
-        reason:
+        subscriptionId:
           type: string
+          description: The ID of the subscription that ended.
+        terminationReason:
+          type: string
+          description: The reason the subscription was terminated.
+          enum:
+            - NETWORK_TERMINATED
+            - SUBSCRIPTION_EXPIRED
+            - MAX_EVENTS_REACHED
+            - ACCESS_TOKEN_EXPIRED
+            - SUBSCRIPTION_DELETED
+      required:
+        - subscriptionId
+        - terminationReason
+
+    SubscriptionStartedData:
+      type: object
+      description: Data payload for subscription-started event.
+      properties:
+        subscriptionId:
+          type: string
+          description: The ID of the subscription that started.
+        initiationReason:
+          type: string
+          description: The reason the subscription was initiated.
+          enum:
+            - SUBSCRIPTION_CREATED
+      required:
+        - subscriptionId
+        - initiationReason
+
+    SubscriptionUpdatedData:
+      type: object
+      description: Data payload for subscription-updated event.
+      properties:
+        subscriptionId:
+          type: string
+          description: The ID of the subscription that was updated.
+        updateReason:
+          type: string
+          description: The reason for the subscription status update.
+          enum:
+            - SUBSCRIPTION_ACTIVE
+            - SUBSCRIPTION_INACTIVE
+      required:
+        - subscriptionId
+        - updateReason
 
     SessionQualityNotification:
       allOf:
@@ -859,23 +918,47 @@ components:
             data:
               $ref: "#/components/schemas/ResolutionProposedData"
 
-    SubscriptionEndsNotification:
+    SubscriptionEndedNotification:
       allOf:
         - $ref: "#/components/schemas/CloudEvent"
         - type: object
           properties:
             type:
               enum:
-                - org.camaraproject.session-insights.v0.subscription-ends
+                - org.camaraproject.session-insights.v0.subscription-ended
             data:
-              $ref: "#/components/schemas/SubscriptionEndsData"
+              $ref: "#/components/schemas/SubscriptionEndedData"
+
+    SubscriptionStartedNotification:
+      allOf:
+        - $ref: "#/components/schemas/CloudEvent"
+        - type: object
+          properties:
+            type:
+              enum:
+                - org.camaraproject.session-insights.v0.subscription-started
+            data:
+              $ref: "#/components/schemas/SubscriptionStartedData"
+
+    SubscriptionUpdatedNotification:
+      allOf:
+        - $ref: "#/components/schemas/CloudEvent"
+        - type: object
+          properties:
+            type:
+              enum:
+                - org.camaraproject.session-insights.v0.subscription-updated
+            data:
+              $ref: "#/components/schemas/SubscriptionUpdatedData"
 
     NotificationEvent:
       oneOf:
         - $ref: "#/components/schemas/SessionQualityNotification"
         - $ref: "#/components/schemas/ScoreAlertNotification"
         - $ref: "#/components/schemas/ResolutionProposedNotification"
-        - $ref: "#/components/schemas/SubscriptionEndsNotification"
+        - $ref: "#/components/schemas/SubscriptionEndedNotification"
+        - $ref: "#/components/schemas/SubscriptionStartedNotification"
+        - $ref: "#/components/schemas/SubscriptionUpdatedNotification"
       discriminator:
         propertyName: type
 
@@ -951,6 +1034,106 @@ components:
         - Gbps
         - Tbps
 
+    SinkCredential:
+      type: object
+      properties:
+        credentialType:
+          type: string
+          enum:
+            - PLAIN
+            - ACCESSTOKEN
+            - REFRESHTOKEN
+          description: |
+            The type of the credential.
+            Note: Type of the credential - MUST be set to ACCESSTOKEN for now.
+      discriminator:
+        propertyName: credentialType
+        mapping:
+          PLAIN: "#/components/schemas/PlainCredential"
+          ACCESSTOKEN: "#/components/schemas/AccessTokenCredential"
+          REFRESHTOKEN: "#/components/schemas/RefreshTokenCredential"
+      required:
+        - credentialType
+
+    PlainCredential:
+      type: object
+      description: A plain credential as a combination of an identifier and a secret. MUST not be used in this API version.
+      allOf:
+        - $ref: "#/components/schemas/SinkCredential"
+        - type: object
+          required:
+            - identifier
+            - secret
+          properties:
+            identifier:
+              description: The identifier might be an account or username.
+              type: string
+            secret:
+              description: The secret might be a password or passphrase.
+              type: string
+
+    AccessTokenCredential:
+      type: object
+      description: An access token credential.
+      allOf:
+        - $ref: "#/components/schemas/SinkCredential"
+        - type: object
+          properties:
+            accessToken:
+              description: REQUIRED. An access token is a previously acquired token granting access to the target resource.
+              type: string
+            accessTokenExpiresUtc:
+              type: string
+              format: date-time
+              description: |
+                REQUIRED. An absolute (UTC) timestamp at which the token shall be considered expired.
+                It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and must have time zone.
+              example: "2025-07-03T12:27:08.312Z"
+            accessTokenType:
+              description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)). For the current version of the API the type MUST be set to `Bearer`.
+              type: string
+              enum:
+                - bearer
+          required:
+            - accessToken
+            - accessTokenExpiresUtc
+            - accessTokenType
+
+    RefreshTokenCredential:
+      type: object
+      description: An access token credential with a refresh token. MUST not be used in this API version.
+      allOf:
+        - $ref: "#/components/schemas/SinkCredential"
+        - type: object
+          properties:
+            accessToken:
+              description: REQUIRED. An access token is a previously acquired token granting access to the target resource.
+              type: string
+            accessTokenExpiresUtc:
+              type: string
+              format: date-time
+              description: |
+                REQUIRED. An absolute UTC instant at which the token shall be considered expired.
+                It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and must have time zone.
+            accessTokenType:
+              description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)).
+              type: string
+              enum:
+                - bearer
+            refreshToken:
+              description: REQUIRED. A refresh token credential used to acquire access tokens.
+              type: string
+            refreshTokenEndpoint:
+              type: string
+              format: uri
+              description: REQUIRED. A URL at which the refresh token can be traded for an access token.
+          required:
+            - accessToken
+            - accessTokenExpiresUtc
+            - accessTokenType
+            - refreshToken
+            - refreshTokenEndpoint
+
     ErrorInfo:
       type: object
       properties:
@@ -981,15 +1164,76 @@ components:
 
 
   responses:
-    BadRequest400:
-      description: Bad request
+    CreateSessionBadRequest400:
+      description: Bad request when creating a session
       headers:
         x-correlator:
           $ref: "#/components/headers/x-correlator"
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ErrorInfo"
+            allOf:
+              - $ref: "#/components/schemas/ErrorInfo"
+              - type: object
+                properties:
+                  status:
+                    enum:
+                      - 400
+                  code:
+                    enum:
+                      - INVALID_ARGUMENT
+                      - INVALID_CREDENTIAL
+                      - INVALID_TOKEN
+                      - INVALID_SINK
+          examples:
+            GENERIC_400_INVALID_ARGUMENT:
+              description: Invalid Argument. Generic Syntax Exception
+              value:
+                status: 400
+                code: INVALID_ARGUMENT
+                message: Client specified an invalid argument, request body or query param.
+            GENERIC_400_INVALID_CREDENTIAL:
+              value:
+                status: 400
+                code: INVALID_CREDENTIAL
+                message: Only Access token is supported.
+            GENERIC_400_INVALID_TOKEN:
+              value:
+                status: 400
+                code: INVALID_TOKEN
+                message: Only bearer token is supported.
+            GENERIC_400_INVALID_SINK:
+              description: Invalid sink value
+              value:
+                status: 400
+                code: INVALID_SINK
+                message: sink not valid for the specified protocol.
+
+    Generic400:
+      description: Bad Request
+      headers:
+        x-correlator:
+          $ref: "#/components/headers/x-correlator"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorInfo"
+              - type: object
+                properties:
+                  status:
+                    enum:
+                      - 400
+                  code:
+                    enum:
+                      - INVALID_ARGUMENT
+          examples:
+            GENERIC_400_INVALID_ARGUMENT:
+              description: Invalid Argument. Generic Syntax Exception
+              value:
+                status: 400
+                code: INVALID_ARGUMENT
+                message: Client specified an invalid argument, request body or query param.
 
     Generic401:
       description: Unauthorized
