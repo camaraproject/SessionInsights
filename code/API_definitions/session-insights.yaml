@@ -291,7 +291,7 @@ paths:
       operationId: sendSessionMetrics
       security:
         - openId:
-            - session-insights:sessions:send-metrics
+            - session-insights:sessions:write
       parameters:
         - name: sessionId
           in: path
