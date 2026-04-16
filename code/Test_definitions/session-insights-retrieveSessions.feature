@@ -1,4 +1,4 @@
-Feature: CAMARA Session Insights API, vwip - Operation retrieveSessionsByDevice
+Feature: CAMARA Session Insights API, v0.1.0-alpha.1 - Operation retrieveSessionsByDevice
     # Input to be provided by the implementation to the tester
     #
     # Implementation indications:
@@ -14,7 +14,7 @@ Feature: CAMARA Session Insights API, vwip - Operation retrieveSessionsByDevice
 
   Background: Common retrieveSessionsByDevice setup
     Given an environment at "apiRoot"
-    And the resource "/session-insights/vwip/retrieve-sessions"
+    And the resource "/session-insights/v0.1alpha1/retrieve-sessions"
     And the header "Content-Type" is set to "application/json"
     And the header "Authorization" is set to a valid access token
     And the header "x-correlator" complies with the schema at "#/components/schemas/XCorrelator"
