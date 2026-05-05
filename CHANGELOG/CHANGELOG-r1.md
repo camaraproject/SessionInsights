@@ -85,7 +85,7 @@ The API definition(s) are based on
 
 ## session-insights 0.1.0-alpha.1
 
-**session-insights 0.1.0-alpha.1 is ...**
+**session-insights 0.1.0-alpha.1 is the initial contribution of the Session Insights API definition, including initial documentation, linting, test cases, and OpenAPI spec.**
 
 - API definition **with inline documentation**:
   - [View it on ReDoc](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r1.1/code/API_definitions/session-insights.yaml&nocors)
@@ -94,19 +94,23 @@ The API definition(s) are based on
 
 ### Added
 
-* _To be filled during release review_
+* Initial OpenAPI specification
+* User Story and Documentation
+* Linting
+* Gherkin Test Definitions
+* Security schemes and scopes
 
 ### Changed
 
-* _To be filled during release review_
+* None — first release
 
 ### Fixed
 
-* _To be filled during release review_
+* None — first release
 
 ### Removed
 
-* _To be filled during release review_
+* None — first release
 
 **Full Changelog**: https://github.com/camaraproject/SessionInsights/commits/r1.1
 
