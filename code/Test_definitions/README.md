@@ -276,17 +276,6 @@ When modifying or adding test scenarios, follow CAMARA testing guidelines:
 - **Error Scenarios**: Include HTTP status and CAMARA error code
   - Examples: `400.1_invalid_argument`, `401.1_no_authorization_header`, `422.1_missing_identifier`
 
-## API Versioning
-
-These tests are designed for **Session Insights API vwip** following CAMARA versioning standards. When the API version changes:
-
-1. Update version references in feature file headers (`vwip` → `v1.0.0`)
-2. Update resource paths in Background sections (`/session-insights/vwip/` → `/session-insights/v1.0.0/`)
-3. Review and update test scenarios for any breaking changes
-4. Validate all existing tests against the new API version per CAMARA guidelines
-5. Add new test cases for any new functionality following CAMARA structure
-6. Ensure OAS schema references remain accurate
-
 ## Related Documentation
 
 - [CAMARA Session Insights API Specification](../API_definitions/session-insights.yaml)
@@ -302,11 +291,5 @@ For questions or issues related to these test definitions:
 1. **API Issues**: Report to the Session Insights API working group
 2. **Test Framework Issues**: Check Cucumber/Gherkin documentation
 3. **CAMARA Guidelines**: Refer to Commonalities working group documentation
-
-## License
-
-This test suite is part of the CAMARA project and follows the same licensing terms as the Session Insights API specification.
-
----
 
 **Note**: These tests are designed to validate API implementation compliance and should be run in appropriate test environments. Do not run tests against production systems without proper authorization and safeguards.
