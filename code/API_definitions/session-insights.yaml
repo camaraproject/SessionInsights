@@ -101,9 +101,7 @@ servers:
     variables:
       apiRoot:
         default: http://localhost:9091
-        description: |
-          API root, defined by service provider, e.g.
-          `api.example.com` or `api.example.com/somepath`
+        description: API root, defined by the service provider, e.g. `api.example.com` or `api.example.com/somepath`
 
 tags:
   - name: Session Insights
@@ -138,8 +136,8 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: "#/components/schemas/HTTPSessionRequest"
-                - $ref: "#/components/schemas/MQTTSessionRequest"
+                - $ref: "#/components/schemas/HttpSessionRequest"
+                - $ref: "#/components/schemas/MqttSessionRequest"
               discriminator:
                 propertyName: protocol
       responses:
@@ -195,6 +193,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Session"
+        "400":
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic400"
         "401":
           $ref: "../common/CAMARA_common.yaml#/components/responses/Generic401"
         "403":
@@ -229,6 +229,8 @@ paths:
           headers:
             x-correlator:
               $ref: "#/components/headers/x-correlator"
+        "400":
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic400"
         "401":
           $ref: "../common/CAMARA_common.yaml#/components/responses/Generic401"
         "403":
@@ -352,6 +354,7 @@ components:
       description: Session ID in UUID format
       type: string
       format: uuid
+      maxLength: 36
 
     SessionRequest:
       description: |
@@ -370,6 +373,7 @@ components:
           type: string
           description: |
             Optional app-level meeting / match / stream ID used for correlation.
+          maxLength: 256
           example: "meet-12345"
         protocol:
           $ref: "#/components/schemas/Protocol"
@@ -378,6 +382,7 @@ components:
             Event types to subscribe to. At least one event type must be specified.
           type: array
           minItems: 1
+          maxItems: 6
           items:
             $ref: "#/components/schemas/SubscriptionEventType"
       required:
@@ -388,15 +393,20 @@ components:
         - types
 
     SessionBase:
+      description: |
+        Common properties shared by all session representations returned by
+        the API, independent of the notification protocol in use.
       type: object
       properties:
         id:
           type: string
           description: Operator-assigned session ID
+          maxLength: 256
           example: "op-sess-abc123"
         applicationSessionId:
           type: string
           description: Application-provided session reference
+          maxLength: 256
           example: "meet-12345"
         device:
           $ref: "../common/CAMARA_common.yaml#/components/schemas/DeviceResponse"
@@ -410,18 +420,29 @@ components:
             The notification endpoint address.
             For HTTP protocol, this is the webhook URL provided in the request.
             For MQTT protocol, this is the quality topic allocated by the operator.
+          maxLength: 2048
         types:
+          description: |
+            Event types the session is subscribed to.
           type: array
+          minItems: 1
+          maxItems: 6
           items:
             $ref: "#/components/schemas/SubscriptionEventType"
         startsAt:
           type: string
           format: date-time
-          description: The date and time when the session became active.
+          description: |
+            The date and time when the session became active, expressed in
+            RFC 3339 / ISO 8601 `date-time` format.
+          maxLength: 40
         expiresAt:
           type: string
           format: date-time
-          description: The date and time when the session will expire.
+          description: |
+            The date and time when the session will expire, expressed in
+            RFC 3339 / ISO 8601 `date-time` format.
+          maxLength: 40
         status:
           $ref: "#/components/schemas/SubscriptionStatus"
       required:
@@ -434,37 +455,58 @@ components:
         - startsAt
         - status
 
-    HTTPSettings:
+    HttpSettings:
       type: object
       description: No additional settings
 
-    MQTTSettings:
+    MqttSettings:
+      description: |
+        Protocol settings returned when the session uses an MQTT notification
+        channel (MQTT3 or MQTT5).
       type: object
       required: [brokerUri, metricsTopic, qualityTopic, qos]
       properties:
         brokerUri:
           type: string
+          description: URI of the MQTT broker the application connects to.
           format: uri
+          maxLength: 2048
         metricsTopic:
           type: string
           description: Topic the **application PUBLISHES** KPI messages to
+          maxLength: 256
           example: session/op-sess-abc123/appSession/meet-12345/metrics
         qualityTopic:
           type: string
           description: Topic the **application SUBSCRIBES** to for CloudEvents
+          maxLength: 256
           example: session/op-sess-abc123/appSession/meet-12345/quality
         qos:
           type: integer
+          description: MQTT Quality of Service level used for delivery.
+          format: int32
           enum:
             - 0
             - 1
+          minimum: 0
+          maximum: 1
         retain:
           type: boolean
+          description: Whether the broker retains the last message on the topic.
           default: false
         messageExpiryInterval:
           type: integer
+          description: |
+            MQTT5 message expiry interval in seconds, after which an undelivered
+            message is discarded by the broker.
+          format: int64
+          minimum: 0
+          maximum: 4294967295
 
-    HTTPSessionRequest:
+    HttpSessionRequest:
+      description: |
+        Session creation request for the HTTP notification protocol, where
+        events are delivered to an HTTPS webhook `sink`.
       allOf:
         - $ref: "#/components/schemas/SessionRequest"
         - type: object
@@ -473,6 +515,7 @@ components:
               type: string
               format: uri
               pattern: ^https:\/\/.+$
+              maxLength: 2048
               description: |
                 The address to which events shall be delivered using the HTTP protocol.
                 Must be HTTPS.
@@ -484,7 +527,10 @@ components:
           required:
             - sink
 
-    MQTTSessionRequest:
+    MqttSessionRequest:
+      description: |
+        Session creation request for the MQTT notification protocol (MQTT3 or
+        MQTT5), where events are delivered via broker topics.
       allOf:
         - $ref: "#/components/schemas/SessionRequest"
         - type: object
@@ -494,7 +540,9 @@ components:
               allOf:
                 - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/SinkCredential"
 
-    HTTPSession:
+    HttpSession:
+      description: |
+        Session representation for the HTTP notification protocol.
       allOf:
         - $ref: "#/components/schemas/SessionBase"
         - type: object
@@ -504,9 +552,12 @@ components:
               enum:
                 - "HTTP"
             protocolSettings:
-              $ref: "#/components/schemas/HTTPSettings"
+              $ref: "#/components/schemas/HttpSettings"
 
-    MQTTSession:
+    MqttSession:
+      description: |
+        Session representation for the MQTT notification protocol (MQTT3 or
+        MQTT5).
       allOf:
         - $ref: "#/components/schemas/SessionBase"
         - type: object
@@ -517,12 +568,15 @@ components:
                 - "MQTT3"
                 - "MQTT5"
             protocolSettings:
-              $ref: "#/components/schemas/MQTTSettings"
+              $ref: "#/components/schemas/MqttSettings"
 
     Session:
+      description: |
+        A Session Insights session, discriminated by its notification
+        `protocol`.
       oneOf:
-        - $ref: "#/components/schemas/HTTPSession"
-        - $ref: "#/components/schemas/MQTTSession"
+        - $ref: "#/components/schemas/HttpSession"
+        - $ref: "#/components/schemas/MqttSession"
       discriminator:
         propertyName: protocol
 
@@ -531,8 +585,8 @@ components:
         Response for session creation. Note that sinkCredential is not
         returned in responses for security reasons.
       oneOf:
-        - $ref: "#/components/schemas/HTTPSession"
-        - $ref: "#/components/schemas/MQTTSession"
+        - $ref: "#/components/schemas/HttpSession"
+        - $ref: "#/components/schemas/MqttSession"
       discriminator:
         propertyName: protocol
 
@@ -540,23 +594,39 @@ components:
       description: Identifier for the Application Profile
       type: string
       format: uuid
+      maxLength: 36
 
     ApplicationServer:
+      description: |
+        Identifies the application server endpoint the session relates to. At
+        least one identifier must be provided.
       type: object
       minProperties: 1
       properties:
         domainName:
           type: string
+          description: Fully qualified domain name of the application server.
+          maxLength: 253
         ipv4Address:
           type: string
+          description: IPv4 address of the application server.
           format: ipv4
+          maxLength: 15
         ipv6Address:
           type: string
+          description: IPv6 address of the application server.
           format: ipv6
+          maxLength: 45
         port:
           type: integer
+          description: TCP/UDP port of the application server.
+          format: int32
+          minimum: 0
+          maximum: 65535
 
     Protocol:
+      description: |
+        Notification protocol used to deliver events for the session.
       type: string
       enum:
         - HTTP
@@ -588,6 +658,9 @@ components:
 
     # ---------- CloudEvent data payloads ----------
     SessionQualityData:
+      description: |
+        CloudEvent data payload reporting the API provider's evaluation of
+        current session quality.
       type: object
       properties:
         upstreamRate:
@@ -634,8 +707,18 @@ components:
           example: 3
         resolution:
           type: string
+          description: |
+            Recommended resolution or remediation guidance for the observed
+            session quality.
+          maxLength: 2048
         score:
           type: integer
+          description: |
+            The Session Insights Score reflecting the API provider's evaluation
+            of session quality, from 0 (worst) to 100 (best).
+          format: int32
+          minimum: 0
+          maximum: 100
       required:
         - packetDelay
         - jitter
@@ -646,14 +729,26 @@ components:
         - score
 
     ScoreAlertData:
+      description: |
+        CloudEvent data payload raised when a session score crosses a
+        configured alerting threshold.
       type: object
       properties:
         score:
           type: integer
+          description: The current session score that triggered the alert.
+          format: int32
+          minimum: 0
+          maximum: 100
         threshold:
           type: integer
+          description: The score threshold that was crossed.
+          format: int32
+          minimum: 0
+          maximum: 100
         severity:
           type: string
+          description: Severity of the score alert.
           enum:
             - warning
             - critical
@@ -661,16 +756,22 @@ components:
         - score
 
     ResolutionProposedData:
+      description: |
+        CloudEvent data payload proposing a corrective action to improve
+        session quality.
       type: object
       properties:
         resolutionType:
           type: string
+          description: The category of the proposed resolution.
           enum:
             - NETWORK_QOS
             - APPLICATION_CONFIG
             - OTHER
         description:
           type: string
+          description: Human-readable description of the proposed resolution.
+          maxLength: 2048
       required:
         - resolutionType
         - description
@@ -682,6 +783,7 @@ components:
         subscriptionId:
           type: string
           description: The ID of the subscription that ended.
+          maxLength: 256
         terminationReason:
           type: string
           description: The reason the subscription was terminated.
@@ -702,6 +804,7 @@ components:
         subscriptionId:
           type: string
           description: The ID of the subscription that started.
+          maxLength: 256
         initiationReason:
           type: string
           description: The reason the subscription was initiated.
@@ -718,6 +821,7 @@ components:
         subscriptionId:
           type: string
           description: The ID of the subscription that was updated.
+          maxLength: 256
         updateReason:
           type: string
           description: The reason for the subscription status update.
@@ -729,6 +833,8 @@ components:
         - updateReason
 
     SessionQualityNotification:
+      description: |
+        CloudEvent notification carrying a session quality score evaluation.
       allOf:
         - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
@@ -740,6 +846,9 @@ components:
               $ref: "#/components/schemas/SessionQualityData"
 
     ScoreAlertNotification:
+      description: |
+        CloudEvent notification raised when a session score crosses an
+        alerting threshold.
       allOf:
         - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
@@ -751,6 +860,9 @@ components:
               $ref: "#/components/schemas/ScoreAlertData"
 
     ResolutionProposedNotification:
+      description: |
+        CloudEvent notification proposing a corrective action to improve
+        session quality.
       allOf:
         - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
@@ -762,6 +874,9 @@ components:
               $ref: "#/components/schemas/ResolutionProposedData"
 
     SubscriptionEndedNotification:
+      description: |
+        CloudEvent notification indicating that an event subscription has
+        ended.
       allOf:
         - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
@@ -773,6 +888,9 @@ components:
               $ref: "#/components/schemas/SubscriptionEndedData"
 
     SubscriptionStartedNotification:
+      description: |
+        CloudEvent notification indicating that an event subscription has
+        started.
       allOf:
         - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
@@ -784,6 +902,9 @@ components:
               $ref: "#/components/schemas/SubscriptionStartedData"
 
     SubscriptionUpdatedNotification:
+      description: |
+        CloudEvent notification indicating that an event subscription has been
+        updated.
       allOf:
         - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
@@ -795,6 +916,9 @@ components:
               $ref: "#/components/schemas/SubscriptionUpdatedData"
 
     NotificationEvent:
+      description: |
+        Union of all CloudEvent notifications that may be delivered to the
+        session sink, discriminated by the CloudEvent `type`.
       oneOf:
         - $ref: "#/components/schemas/SessionQualityNotification"
         - $ref: "#/components/schemas/ScoreAlertNotification"
@@ -811,16 +935,22 @@ components:
       properties:
         latency:
           type: number
+          description: Application-observed latency, in milliseconds.
           format: float
         jitter:
           type: number
+          description: Application-observed jitter, in milliseconds.
           format: float
         packetLoss:
           type: number
+          description: Application-observed packet loss, as a percentage.
         bitrate:
           type: number
+          description: Application-observed bitrate, in kbps.
         resolution:
           type: string
+          description: Application-observed media resolution (e.g. "1920x1080").
+          maxLength: 256
       required:
         - latency
         - jitter
@@ -852,6 +982,7 @@ components:
           example: 12
           format: int32
           minimum: 1
+          maximum: 1000000
         unit:
           $ref: "#/components/schemas/TimeUnitEnum"
 
@@ -890,6 +1021,7 @@ components:
       items:
         $ref: "#/components/schemas/Session"
       minItems: 0
+      maxItems: 100
 
 
   responses:
