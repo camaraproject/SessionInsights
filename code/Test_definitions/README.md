@@ -84,7 +84,7 @@ Each test file covers both **sunny day scenarios** (successful operations) and *
    - Negative value and boundary condition testing
 
 6. **CAMARA Error Handling**
-   - Standard error codes: INVALID_ARGUMENT, NOT_FOUND, CONFLICT, GONE
+   - Standard error codes: INVALID_ARGUMENT, NOT_FOUND, ALREADY_EXISTS, GONE
    - Device identifier errors: MISSING_IDENTIFIER, UNNECESSARY_IDENTIFIER  
    - Rate limiting: TOO_MANY_REQUESTS, QUOTA_EXCEEDED
    - Proper error message and status code validation
