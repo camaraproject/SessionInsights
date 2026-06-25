@@ -1,0 +1,13 @@
+repository:
+  repository_name: SessionInsights
+  release_tag: r2.1
+  release_type: pre-release-rc
+  release_date: null
+  src_commit_sha: fb4a91c380ac0f00efb50052cee27f9bf8f154a6
+apis:
+- api_name: session-insights
+  api_version: 0.2.0-rc.1
+  api_title: Session Insights
+dependencies:
+  commonalities_release: r4.3 (0.8.0)
+  identity_consent_management_release: r4.2 (0.5.0)
