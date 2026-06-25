@@ -272,6 +272,17 @@ Feature: CAMARA Session Insights API, vwip - Operation createSession
     And the response property "$.code" is "INVALID_ARGUMENT"
     And the response property "$.message" contains a user friendly text
 
+  @session_insights_createSession_400.12_empty_request_body
+  Scenario: Empty request body
+    Given the request body is empty
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.message" contains a user friendly text
+
     # Generic 401 errors
 
   @session_insights_createSession_401.1_no_authorization_header
@@ -343,7 +354,7 @@ Feature: CAMARA Session Insights API, vwip - Operation createSession
 
     # Errors 409
 
-  @session_insights_createSession_409.1_session_conflict
+  @session_insights_createSession_409.1_session_already_exists
   Scenario: Session already exists for this device and application profile
     Given a valid device with phoneNumber
     And a valid Application Profile ID
@@ -356,7 +367,7 @@ Feature: CAMARA Session Insights API, vwip - Operation createSession
     And the response header "x-correlator" has same value as the request header "x-correlator"
     And the response header "Content-Type" is "application/json"
     And the response property "$.status" is 409
-    And the response property "$.code" is "CONFLICT"
+    And the response property "$.code" is "ALREADY_EXISTS"
     And the response property "$.message" contains a user friendly text
 
     # Errors 422

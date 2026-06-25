@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Session Insights
   version: wip
-  x-camara-commonalities: 0.6
+  x-camara-commonalities: 0.8.0
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -50,38 +50,47 @@ info:
     - Degraded score attributed to poor signal or congestion in the access network.
     - Application requests service enhancement through complementary CAMARA APIs (e.g., QualityOnDemand, NetworkAccessManagement).
 
-    # Authorization and Authentication
+    <!-- CAMARA:MANDATORY:authorization-and-authentication:BEGIN -->
+    # Authorization and authentication
 
     The "Camara Security and Interoperability Profile" provides details of how an API consumer requests an access token. Please refer to Identity and Consent Management (https://github.com/camaraproject/IdentityAndConsentManagement/) for the released version of the profile.
 
     The specific authorization flows to be used will be agreed upon during the onboarding process, happening between the API consumer and the API provider, taking into account the declared purpose for accessing the API, whilst also being subject to the prevailing legal framework dictated by local legislation.
 
     In cases where personal data is processed by the API and users can exercise their rights through mechanisms such as opt-in and/or opt-out, the use of three-legged access tokens is mandatory. This ensures that the API remains in compliance with privacy regulations, upholding the principles of transparency and user-centric privacy-by-design.
+    <!-- CAMARA:MANDATORY:authorization-and-authentication:END -->
 
-    ## Identifying the device from the access token
+    <!-- CAMARA:MANDATORY:identifying-device-from-access-token:BEGIN -->
+    # Identifying the device from the access token
 
-    - **Three-legged access token** (end-user authentication): The device is automatically identified from the access token — the end user authenticated directly, so the API provider already knows which device is involved. The `device` parameter MUST NOT be provided.
-    - **Two-legged access token** (server-to-server): The access token does not identify a specific end user, so the API consumer MUST provide the `device` object in the request to indicate which device the session applies to.
+    This API requires the API consumer to identify a device as the subject of the API as follows:
+    - When the API is invoked using a two-legged access token, the subject will be identified from the optional `device` object, which therefore MUST be provided.
+    - When a three-legged access token is used however, this optional identifier MUST NOT be provided, as the subject will be uniquely identified from the access token.
 
-    This approach simplifies API usage for consumers using three-legged tokens by relying on the identity already established during the authentication process.
+    This approach simplifies API usage for API consumers using a three-legged access token to invoke the API by relying on the information associated with the access token that was identified during the authentication process.
 
     ## Error handling:
 
     - If the subject cannot be identified from the access token and the optional `device` object is not included in the request, then the server will return an error with the `422 MISSING_IDENTIFIER` error code.
 
-    - If the subject can be identified from the access token and the optional `device` is also included in the request, then the server will return an error with the `422 UNNECESSARY_IDENTIFIER` error code. This will be the case even if the same device is identified by these two methods, as the server is unable to make this comparison.
+    - If the subject can be identified from the access token and the optional `device` object is also included in the request, then the server will return an error with the `422 UNNECESSARY_IDENTIFIER` error code. This will be the case even if the same device is identified by these two methods, as the server is unable to make this comparison.
+    <!-- CAMARA:MANDATORY:identifying-device-from-access-token:END -->
 
+    <!-- CAMARA:MANDATORY:additional-error-responses:BEGIN -->
     # Additional CAMARA error responses
 
-    In addition to the error responses documented for each operation in this API, the following common CAMARA error patterns may also apply:
+    The list of error codes in this API specification is not exhaustive. Therefore the API specification MAY not document some non-mandatory error statuses as indicated in `CAMARA API Design Guide`.
 
-    - `400 INVALID_ARGUMENT` — A required field is missing or a parameter value is out of range.
-    - `401 UNAUTHENTICATED` — The access token is missing, expired, or invalid.
-    - `403 PERMISSION_DENIED` — The API consumer does not have permission to perform the requested operation.
-    - `429 TOO_MANY_REQUESTS` — The API consumer has exceeded the rate limit.
-    - `501 NOT_IMPLEMENTED` — The requested operation is not supported by this API provider. This error is only returned if it is explicitly documented for the specific operation.
+    Please refer to the `CAMARA_common.yaml` of the Commonalities Release associated to this API version for a complete list of error responses. The applicable Commonalities Release can be identified in the `API Readiness Checklist` document associated to this API version.
 
-    This list is not exhaustive. Please refer to `CAMARA_common.yaml` of the Commonalities release associated with this API version for a complete list. The applicable Commonalities release can be identified in the `API Readiness Checklist` document.
+    As a specific rule, error `501 - NOT_IMPLEMENTED` can be only a possible error response if it is explicitly documented in the API.
+    <!-- CAMARA:MANDATORY:additional-error-responses:END -->
+
+    <!-- CAMARA:MANDATORY:request-body-strictness:BEGIN -->
+    # Request body strictness
+
+    This API rejects requests with JSON request bodies that contain properties not declared in this specification, at any nesting level. Unknown properties result in a `400 INVALID_ARGUMENT` response.
+    <!-- CAMARA:MANDATORY:request-body-strictness:END -->
 
 externalDocs:
   description: Project documentation at CAMARA
@@ -92,9 +101,7 @@ servers:
     variables:
       apiRoot:
         default: http://localhost:9091
-        description: |
-          API root, defined by service provider, e.g.
-          `api.example.com` or `api.example.com/somepath`
+        description: API root, defined by the service provider, e.g. `api.example.com` or `api.example.com/somepath`
 
 tags:
   - name: Session Insights
@@ -129,8 +136,8 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: "#/components/schemas/HTTPSessionRequest"
-                - $ref: "#/components/schemas/MQTTSessionRequest"
+                - $ref: "#/components/schemas/HttpSessionRequest"
+                - $ref: "#/components/schemas/MqttSessionRequest"
               discriminator:
                 propertyName: protocol
       responses:
@@ -146,15 +153,15 @@ paths:
         "400":
           $ref: "#/components/responses/CreateSessionBadRequest400"
         "401":
-          $ref: "#/components/responses/Generic401"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic401"
         "403":
-          $ref: "#/components/responses/Forbidden403"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic403"
         "409":
-          $ref: "#/components/responses/Conflict409"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic409"
         "422":
-          $ref: "#/components/responses/Generic422"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic422"
         "429":
-          $ref: "#/components/responses/Generic429"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic429"
 
   /sessions/{sessionId}:
     get:
@@ -186,14 +193,16 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Session"
+        "400":
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic400"
         "401":
-          $ref: "#/components/responses/Generic401"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic401"
         "403":
-          $ref: "#/components/responses/Forbidden403"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic403"
         "404":
-          $ref: "#/components/responses/NotFound404"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic404"
         "410":
-          $ref: "#/components/responses/Generic410"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic410"
 
     delete:
       tags:
@@ -220,14 +229,16 @@ paths:
           headers:
             x-correlator:
               $ref: "#/components/headers/x-correlator"
+        "400":
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic400"
         "401":
-          $ref: "#/components/responses/Generic401"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic401"
         "403":
-          $ref: "#/components/responses/Forbidden403"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic403"
         "404":
-          $ref: "#/components/responses/NotFound404"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic404"
         "410":
-          $ref: "#/components/responses/Generic410"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic410"
 
   /retrieve-sessions:
     post:
@@ -266,17 +277,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/RetrieveSessionsOutput"
         "400":
-          $ref: "#/components/responses/Generic400"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic400"
         "401":
-          $ref: "#/components/responses/Generic401"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic401"
         "403":
-          $ref: "#/components/responses/Forbidden403"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic403"
         "404":
-          $ref: "#/components/responses/NotFound404"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic404"
         "422":
-          $ref: "#/components/responses/Generic422"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic422"
         "429":
-          $ref: "#/components/responses/Generic429"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic429"
 
   /sessions/{sessionId}/metrics:
     post:
@@ -313,48 +324,37 @@ paths:
             x-correlator:
               $ref: "#/components/headers/x-correlator"
         "400":
-          $ref: "#/components/responses/Generic400"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic400"
         "401":
-          $ref: "#/components/responses/Generic401"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic401"
         "403":
-          $ref: "#/components/responses/Forbidden403"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic403"
         "404":
-          $ref: "#/components/responses/NotFound404"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic404"
         "410":
-          $ref: "#/components/responses/Generic410"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic410"
         "422":
-          $ref: "#/components/responses/Generic422"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/Generic422"
 
 components:
   parameters:
     x-correlator:
-      name: x-correlator
-      in: header
-      description: Correlation id for the different services
-      schema:
-        $ref: "#/components/schemas/XCorrelator"
+      $ref: "../common/CAMARA_common.yaml#/components/parameters/x-correlator"
 
   headers:
     x-correlator:
-      description: Correlation id for the different services
-      schema:
-        $ref: "#/components/schemas/XCorrelator"
+      $ref: "../common/CAMARA_common.yaml#/components/headers/x-correlator"
 
   securitySchemes:
     openId:
-      type: openIdConnect
-      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+      $ref: "../common/CAMARA_common.yaml#/components/securitySchemes/openId"
 
   schemas:
-    XCorrelator:
-      type: string
-      pattern: ^[a-zA-Z0-9-_:;.\/<>{}]{0,256}$
-      example: "b4333c46-49c0-4f62-80d7-f0ef930f1c46"
-
     SessionId:
       description: Session ID in UUID format
       type: string
       format: uuid
+      maxLength: 36
 
     SessionRequest:
       description: |
@@ -366,13 +366,14 @@ components:
         applicationProfileId:
           $ref: "#/components/schemas/ApplicationProfileId"
         device:
-          $ref: "#/components/schemas/Device"
+          $ref: "../common/CAMARA_common.yaml#/components/schemas/Device"
         applicationServer:
           $ref: "#/components/schemas/ApplicationServer"
         applicationSessionId:
           type: string
           description: |
             Optional app-level meeting / match / stream ID used for correlation.
+          maxLength: 256
           example: "meet-12345"
         protocol:
           $ref: "#/components/schemas/Protocol"
@@ -381,6 +382,7 @@ components:
             Event types to subscribe to. At least one event type must be specified.
           type: array
           minItems: 1
+          maxItems: 6
           items:
             $ref: "#/components/schemas/SubscriptionEventType"
       required:
@@ -391,18 +393,23 @@ components:
         - types
 
     SessionBase:
+      description: |
+        Common properties shared by all session representations returned by
+        the API, independent of the notification protocol in use.
       type: object
       properties:
         id:
           type: string
           description: Operator-assigned session ID
+          maxLength: 256
           example: "op-sess-abc123"
         applicationSessionId:
           type: string
           description: Application-provided session reference
+          maxLength: 256
           example: "meet-12345"
         device:
-          $ref: "#/components/schemas/DeviceResponse"
+          $ref: "../common/CAMARA_common.yaml#/components/schemas/DeviceResponse"
         applicationServer:
           $ref: "#/components/schemas/ApplicationServer"
         protocol:
@@ -413,18 +420,29 @@ components:
             The notification endpoint address.
             For HTTP protocol, this is the webhook URL provided in the request.
             For MQTT protocol, this is the quality topic allocated by the operator.
+          maxLength: 2048
         types:
+          description: |
+            Event types the session is subscribed to.
           type: array
+          minItems: 1
+          maxItems: 6
           items:
             $ref: "#/components/schemas/SubscriptionEventType"
         startsAt:
           type: string
           format: date-time
-          description: The date and time when the session became active.
+          description: |
+            The date and time when the session became active, expressed in
+            RFC 3339 / ISO 8601 `date-time` format.
+          maxLength: 40
         expiresAt:
           type: string
           format: date-time
-          description: The date and time when the session will expire.
+          description: |
+            The date and time when the session will expire, expressed in
+            RFC 3339 / ISO 8601 `date-time` format.
+          maxLength: 40
         status:
           $ref: "#/components/schemas/SubscriptionStatus"
       required:
@@ -437,37 +455,58 @@ components:
         - startsAt
         - status
 
-    HTTPSettings:
+    HttpSettings:
       type: object
       description: No additional settings
 
-    MQTTSettings:
+    MqttSettings:
+      description: |
+        Protocol settings returned when the session uses an MQTT notification
+        channel (MQTT3 or MQTT5).
       type: object
       required: [brokerUri, metricsTopic, qualityTopic, qos]
       properties:
         brokerUri:
           type: string
+          description: URI of the MQTT broker the application connects to.
           format: uri
+          maxLength: 2048
         metricsTopic:
           type: string
           description: Topic the **application PUBLISHES** KPI messages to
+          maxLength: 256
           example: session/op-sess-abc123/appSession/meet-12345/metrics
         qualityTopic:
           type: string
           description: Topic the **application SUBSCRIBES** to for CloudEvents
+          maxLength: 256
           example: session/op-sess-abc123/appSession/meet-12345/quality
         qos:
           type: integer
+          description: MQTT Quality of Service level used for delivery.
+          format: int32
           enum:
             - 0
             - 1
+          minimum: 0
+          maximum: 1
         retain:
           type: boolean
+          description: Whether the broker retains the last message on the topic.
           default: false
         messageExpiryInterval:
           type: integer
+          description: |
+            MQTT5 message expiry interval in seconds, after which an undelivered
+            message is discarded by the broker.
+          format: int64
+          minimum: 0
+          maximum: 4294967295
 
-    HTTPSessionRequest:
+    HttpSessionRequest:
+      description: |
+        Session creation request for the HTTP notification protocol, where
+        events are delivered to an HTTPS webhook `sink`.
       allOf:
         - $ref: "#/components/schemas/SessionRequest"
         - type: object
@@ -476,6 +515,7 @@ components:
               type: string
               format: uri
               pattern: ^https:\/\/.+$
+              maxLength: 2048
               description: |
                 The address to which events shall be delivered using the HTTP protocol.
                 Must be HTTPS.
@@ -483,11 +523,14 @@ components:
             sinkCredential:
               description: A sink credential provides authentication or authorization information necessary to enable delivery of events to a target.
               allOf:
-                - $ref: "#/components/schemas/SinkCredential"
+                - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/SinkCredential"
           required:
             - sink
 
-    MQTTSessionRequest:
+    MqttSessionRequest:
+      description: |
+        Session creation request for the MQTT notification protocol (MQTT3 or
+        MQTT5), where events are delivered via broker topics.
       allOf:
         - $ref: "#/components/schemas/SessionRequest"
         - type: object
@@ -495,9 +538,11 @@ components:
             sinkCredential:
               description: Credential for MQTT broker access.
               allOf:
-                - $ref: "#/components/schemas/SinkCredential"
+                - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/SinkCredential"
 
-    HTTPSession:
+    HttpSession:
+      description: |
+        Session representation for the HTTP notification protocol.
       allOf:
         - $ref: "#/components/schemas/SessionBase"
         - type: object
@@ -507,9 +552,12 @@ components:
               enum:
                 - "HTTP"
             protocolSettings:
-              $ref: "#/components/schemas/HTTPSettings"
+              $ref: "#/components/schemas/HttpSettings"
 
-    MQTTSession:
+    MqttSession:
+      description: |
+        Session representation for the MQTT notification protocol (MQTT3 or
+        MQTT5).
       allOf:
         - $ref: "#/components/schemas/SessionBase"
         - type: object
@@ -520,12 +568,15 @@ components:
                 - "MQTT3"
                 - "MQTT5"
             protocolSettings:
-              $ref: "#/components/schemas/MQTTSettings"
+              $ref: "#/components/schemas/MqttSettings"
 
     Session:
+      description: |
+        A Session Insights session, discriminated by its notification
+        `protocol`.
       oneOf:
-        - $ref: "#/components/schemas/HTTPSession"
-        - $ref: "#/components/schemas/MQTTSession"
+        - $ref: "#/components/schemas/HttpSession"
+        - $ref: "#/components/schemas/MqttSession"
       discriminator:
         propertyName: protocol
 
@@ -534,157 +585,48 @@ components:
         Response for session creation. Note that sinkCredential is not
         returned in responses for security reasons.
       oneOf:
-        - $ref: "#/components/schemas/HTTPSession"
-        - $ref: "#/components/schemas/MQTTSession"
+        - $ref: "#/components/schemas/HttpSession"
+        - $ref: "#/components/schemas/MqttSession"
       discriminator:
         propertyName: protocol
-
-    Device:
-      description: |
-        End-user equipment able to connect to a network. Examples of
-        devices include smartphones or IoT sensors/actuators.
-
-        The developer can choose to provide the below specified device
-        identifiers:
-
-        * `ipv4Address`
-        * `ipv6Address`
-        * `phoneNumber`
-        * `networkAccessIdentifier`
-
-      type: object
-      properties:
-        phoneNumber:
-          $ref: "#/components/schemas/PhoneNumber"
-        networkAccessIdentifier:
-          $ref: "#/components/schemas/NetworkAccessIdentifier"
-        ipv4Address:
-          $ref: "#/components/schemas/DeviceIpv4Addr"
-        ipv6Address:
-          $ref: "#/components/schemas/DeviceIpv6Address"
-      minProperties: 1
-
-    DeviceResponse:
-      description: |
-        An identifier for the end-user equipment able to connect to the network
-        that the response refers to. This parameter is only returned when the
-        API consumer includes the `device` parameter in their request (i.e.
-        they are using a two-legged access token), and is relevant when more
-        than one device identifier is specified, as only one of those device
-        identifiers is allowed in the response.
-
-        If the API consumer provides more than one device identifier in their
-        request, the API provider must return a single identifier which is the
-        one they are using to fulfil the request, even if the identifiers do
-        not match the same device. API provider does not perform any logic to
-        validate/correlate that the indicated device identifiers match the same
-        device. No error should be returned if the identifiers are otherwise
-        valid to prevent API consumers correlating different identifiers with a
-        given end user.
-      allOf:
-        - $ref: "#/components/schemas/Device"
-        - maxProperties: 1
-
-    NetworkAccessIdentifier:
-      description: |
-        A public identifier addressing a subscription in a mobile network. In
-        3GPP terminology, it corresponds to the GPSI formatted with the
-        External Identifier ({Local Identifier}@{Domain Identifier}). Unlike
-        the telephone number, the network access identifier is not subjected
-        to portability ruling in force, and is individually managed by each
-        operator.
-      type: string
-      example: "123456789@domain.com"
-
-    PhoneNumber:
-      description: |
-        A public identifier addressing a telephone subscription. In mobile
-        networks it corresponds to the MSISDN (Mobile Station International
-        Subscriber Directory Number). In order to be globally unique it has to
-        be formatted in international format, according to E.164 standard,
-        optionally prefixed with '+'.
-      type: string
-      pattern: '^\+?[0-9]{5,15}$'
-      example: "123456789"
-
-    DeviceIpv4Addr:
-      type: object
-      description: |
-        The device should be identified by either the public (observed) IP
-        address and port as seen by the application server, or the private
-        (local) and any public (observed) IP addresses in use by the device
-        (this information can be obtained by various means, for example from
-        some DNS servers).
-
-        If the allocated and observed IP addresses are the same (i.e. NAT is
-        not in use) then  the same address should be specified for both
-        publicAddress and privateAddress.
-
-        If NAT64 is in use, the device should be identified by its
-        publicAddress and publicPort, or separately by its allocated IPv6
-        address (field ipv6Address of the Device object)
-
-        In all cases, publicAddress must be specified, along with at least one
-        of either privateAddress or publicPort, dependent upon which is known.
-        In general, mobile devices cannot be identified by their public IPv4
-        address alone.
-      properties:
-        publicAddress:
-          $ref: "#/components/schemas/SingleIpv4Addr"
-        privateAddress:
-          $ref: "#/components/schemas/SingleIpv4Addr"
-        publicPort:
-          $ref: "#/components/schemas/Port"
-      anyOf:
-        - required: [publicAddress, privateAddress]
-        - required: [publicAddress, publicPort]
-      example: {"publicAddress": "84.125.93.10", "publicPort": 59765}
-
-    DeviceIpv6Address:
-      description: |
-        The device should be identified by the observed IPv6 address, or by any
-        single IPv6 address from within the subnet allocated to the device
-        (e.g. adding ::0 to the /64 prefix).
-
-        The session shall apply to all IP flows between the device subnet and
-        the specified application server, unless further restricted by the
-        optional parameters devicePorts or applicationServerPorts.
-      type: string
-      format: ipv6
-      example: 2001:db8:85a3:8d3:1319:8a2e:370:7344
-    SingleIpv4Addr:
-      description: A single IPv4 address with no subnet mask
-      type: string
-      format: ipv4
-      example: "84.125.93.10"
-
-    Port:
-      description: TCP or UDP port number
-      type: integer
-      minimum: 0
-      maximum: 65535
 
     ApplicationProfileId:
       description: Identifier for the Application Profile
       type: string
       format: uuid
+      maxLength: 36
 
     ApplicationServer:
+      description: |
+        Identifies the application server endpoint the session relates to. At
+        least one identifier must be provided.
       type: object
       minProperties: 1
       properties:
         domainName:
           type: string
+          description: Fully qualified domain name of the application server.
+          maxLength: 253
         ipv4Address:
           type: string
+          description: IPv4 address of the application server.
           format: ipv4
+          maxLength: 15
         ipv6Address:
           type: string
+          description: IPv6 address of the application server.
           format: ipv6
+          maxLength: 45
         port:
           type: integer
+          description: TCP/UDP port of the application server.
+          format: int32
+          minimum: 0
+          maximum: 65535
 
     Protocol:
+      description: |
+        Notification protocol used to deliver events for the session.
       type: string
       enum:
         - HTTP
@@ -714,37 +656,11 @@ components:
         - EXPIRED
         - DELETED
 
-    # ---------- CloudEvents & data payloads ----------
-    CloudEvent:
-      type: object
-      properties:
-        specversion:
-          type: string
-          enum:
-            - "1.0"
-        id:
-          type: string
-        source:
-          type: string
-        type:
-          $ref: "#/components/schemas/SubscriptionEventType"
-        time:
-          type: string
-          format: date-time
-        datacontenttype:
-          type: string
-          default: application/json
-        data:
-          type: object
-      required:
-        - specversion
-        - id
-        - source
-        - type
-        - time
-        - data
-
+    # ---------- CloudEvent data payloads ----------
     SessionQualityData:
+      description: |
+        CloudEvent data payload reporting the API provider's evaluation of
+        current session quality.
       type: object
       properties:
         upstreamRate:
@@ -791,8 +707,18 @@ components:
           example: 3
         resolution:
           type: string
+          description: |
+            Recommended resolution or remediation guidance for the observed
+            session quality.
+          maxLength: 2048
         score:
           type: integer
+          description: |
+            The Session Insights Score reflecting the API provider's evaluation
+            of session quality, from 0 (worst) to 100 (best).
+          format: int32
+          minimum: 0
+          maximum: 100
       required:
         - packetDelay
         - jitter
@@ -803,14 +729,26 @@ components:
         - score
 
     ScoreAlertData:
+      description: |
+        CloudEvent data payload raised when a session score crosses a
+        configured alerting threshold.
       type: object
       properties:
         score:
           type: integer
+          description: The current session score that triggered the alert.
+          format: int32
+          minimum: 0
+          maximum: 100
         threshold:
           type: integer
+          description: The score threshold that was crossed.
+          format: int32
+          minimum: 0
+          maximum: 100
         severity:
           type: string
+          description: Severity of the score alert.
           enum:
             - warning
             - critical
@@ -818,16 +756,22 @@ components:
         - score
 
     ResolutionProposedData:
+      description: |
+        CloudEvent data payload proposing a corrective action to improve
+        session quality.
       type: object
       properties:
         resolutionType:
           type: string
+          description: The category of the proposed resolution.
           enum:
             - NETWORK_QOS
             - APPLICATION_CONFIG
             - OTHER
         description:
           type: string
+          description: Human-readable description of the proposed resolution.
+          maxLength: 2048
       required:
         - resolutionType
         - description
@@ -839,6 +783,7 @@ components:
         subscriptionId:
           type: string
           description: The ID of the subscription that ended.
+          maxLength: 256
         terminationReason:
           type: string
           description: The reason the subscription was terminated.
@@ -859,6 +804,7 @@ components:
         subscriptionId:
           type: string
           description: The ID of the subscription that started.
+          maxLength: 256
         initiationReason:
           type: string
           description: The reason the subscription was initiated.
@@ -875,6 +821,7 @@ components:
         subscriptionId:
           type: string
           description: The ID of the subscription that was updated.
+          maxLength: 256
         updateReason:
           type: string
           description: The reason for the subscription status update.
@@ -886,8 +833,10 @@ components:
         - updateReason
 
     SessionQualityNotification:
+      description: |
+        CloudEvent notification carrying a session quality score evaluation.
       allOf:
-        - $ref: "#/components/schemas/CloudEvent"
+        - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
           properties:
             type:
@@ -897,8 +846,11 @@ components:
               $ref: "#/components/schemas/SessionQualityData"
 
     ScoreAlertNotification:
+      description: |
+        CloudEvent notification raised when a session score crosses an
+        alerting threshold.
       allOf:
-        - $ref: "#/components/schemas/CloudEvent"
+        - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
           properties:
             type:
@@ -908,8 +860,11 @@ components:
               $ref: "#/components/schemas/ScoreAlertData"
 
     ResolutionProposedNotification:
+      description: |
+        CloudEvent notification proposing a corrective action to improve
+        session quality.
       allOf:
-        - $ref: "#/components/schemas/CloudEvent"
+        - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
           properties:
             type:
@@ -919,8 +874,11 @@ components:
               $ref: "#/components/schemas/ResolutionProposedData"
 
     SubscriptionEndedNotification:
+      description: |
+        CloudEvent notification indicating that an event subscription has
+        ended.
       allOf:
-        - $ref: "#/components/schemas/CloudEvent"
+        - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
           properties:
             type:
@@ -930,8 +888,11 @@ components:
               $ref: "#/components/schemas/SubscriptionEndedData"
 
     SubscriptionStartedNotification:
+      description: |
+        CloudEvent notification indicating that an event subscription has
+        started.
       allOf:
-        - $ref: "#/components/schemas/CloudEvent"
+        - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
           properties:
             type:
@@ -941,8 +902,11 @@ components:
               $ref: "#/components/schemas/SubscriptionStartedData"
 
     SubscriptionUpdatedNotification:
+      description: |
+        CloudEvent notification indicating that an event subscription has been
+        updated.
       allOf:
-        - $ref: "#/components/schemas/CloudEvent"
+        - $ref: "../common/CAMARA_event_common.yaml#/components/schemas/CloudEvent"
         - type: object
           properties:
             type:
@@ -952,6 +916,9 @@ components:
               $ref: "#/components/schemas/SubscriptionUpdatedData"
 
     NotificationEvent:
+      description: |
+        Union of all CloudEvent notifications that may be delivered to the
+        session sink, discriminated by the CloudEvent `type`.
       oneOf:
         - $ref: "#/components/schemas/SessionQualityNotification"
         - $ref: "#/components/schemas/ScoreAlertNotification"
@@ -968,16 +935,22 @@ components:
       properties:
         latency:
           type: number
+          description: Application-observed latency, in milliseconds.
           format: float
         jitter:
           type: number
+          description: Application-observed jitter, in milliseconds.
           format: float
         packetLoss:
           type: number
+          description: Application-observed packet loss, as a percentage.
         bitrate:
           type: number
+          description: Application-observed bitrate, in kbps.
         resolution:
           type: string
+          description: Application-observed media resolution (e.g. "1920x1080").
+          maxLength: 256
       required:
         - latency
         - jitter
@@ -1009,6 +982,7 @@ components:
           example: 12
           format: int32
           minimum: 1
+          maximum: 1000000
         unit:
           $ref: "#/components/schemas/TimeUnitEnum"
 
@@ -1034,126 +1008,12 @@ components:
         - Gbps
         - Tbps
 
-    SinkCredential:
-      type: object
-      properties:
-        credentialType:
-          type: string
-          enum:
-            - PLAIN
-            - ACCESSTOKEN
-            - REFRESHTOKEN
-          description: |
-            The type of the credential.
-            Note: Type of the credential - MUST be set to ACCESSTOKEN for now.
-      discriminator:
-        propertyName: credentialType
-        mapping:
-          PLAIN: "#/components/schemas/PlainCredential"
-          ACCESSTOKEN: "#/components/schemas/AccessTokenCredential"
-          REFRESHTOKEN: "#/components/schemas/RefreshTokenCredential"
-      required:
-        - credentialType
-
-    PlainCredential:
-      type: object
-      description: A plain credential as a combination of an identifier and a secret. MUST not be used in this API version.
-      allOf:
-        - $ref: "#/components/schemas/SinkCredential"
-        - type: object
-          required:
-            - identifier
-            - secret
-          properties:
-            identifier:
-              description: The identifier might be an account or username.
-              type: string
-            secret:
-              description: The secret might be a password or passphrase.
-              type: string
-
-    AccessTokenCredential:
-      type: object
-      description: An access token credential.
-      allOf:
-        - $ref: "#/components/schemas/SinkCredential"
-        - type: object
-          properties:
-            accessToken:
-              description: REQUIRED. An access token is a previously acquired token granting access to the target resource.
-              type: string
-            accessTokenExpiresUtc:
-              type: string
-              format: date-time
-              description: |
-                REQUIRED. An absolute (UTC) timestamp at which the token shall be considered expired.
-                It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and must have time zone.
-              example: "2025-07-03T12:27:08.312Z"
-            accessTokenType:
-              description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)). For the current version of the API the type MUST be set to `Bearer`.
-              type: string
-              enum:
-                - bearer
-          required:
-            - accessToken
-            - accessTokenExpiresUtc
-            - accessTokenType
-
-    RefreshTokenCredential:
-      type: object
-      description: An access token credential with a refresh token. MUST not be used in this API version.
-      allOf:
-        - $ref: "#/components/schemas/SinkCredential"
-        - type: object
-          properties:
-            accessToken:
-              description: REQUIRED. An access token is a previously acquired token granting access to the target resource.
-              type: string
-            accessTokenExpiresUtc:
-              type: string
-              format: date-time
-              description: |
-                REQUIRED. An absolute UTC instant at which the token shall be considered expired.
-                It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and must have time zone.
-            accessTokenType:
-              description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)).
-              type: string
-              enum:
-                - bearer
-            refreshToken:
-              description: REQUIRED. A refresh token credential used to acquire access tokens.
-              type: string
-            refreshTokenEndpoint:
-              type: string
-              format: uri
-              description: REQUIRED. A URL at which the refresh token can be traded for an access token.
-          required:
-            - accessToken
-            - accessTokenExpiresUtc
-            - accessTokenType
-            - refreshToken
-            - refreshTokenEndpoint
-
-    ErrorInfo:
-      type: object
-      properties:
-        status:
-          type: integer
-        code:
-          type: string
-        message:
-          type: string
-      required:
-        - status
-        - code
-        - message
-
     RetrieveSessionsInput:
       description: Parameters to retrieve Session Insights sessions by device
       type: object
       properties:
         device:
-          $ref: "#/components/schemas/Device"
+          $ref: "../common/CAMARA_common.yaml#/components/schemas/Device"
 
     RetrieveSessionsOutput:
       description: Session Insights session information for a given device
@@ -1161,6 +1021,7 @@ components:
       items:
         $ref: "#/components/schemas/Session"
       minItems: 0
+      maxItems: 100
 
 
   responses:
@@ -1173,7 +1034,7 @@ components:
         application/json:
           schema:
             allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
+              - $ref: "../common/CAMARA_common.yaml#/components/schemas/ErrorInfo"
               - type: object
                 properties:
                   status:
@@ -1208,267 +1069,3 @@ components:
                 status: 400
                 code: INVALID_SINK
                 message: sink not valid for the specified protocol.
-
-    Generic400:
-      description: Bad Request
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 400
-                  code:
-                    enum:
-                      - INVALID_ARGUMENT
-          examples:
-            GENERIC_400_INVALID_ARGUMENT:
-              description: Invalid Argument. Generic Syntax Exception
-              value:
-                status: 400
-                code: INVALID_ARGUMENT
-                message: Client specified an invalid argument, request body or query param.
-
-    Generic401:
-      description: Unauthorized
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 401
-                  code:
-                    enum:
-                      - UNAUTHENTICATED
-          examples:
-            GENERIC_401_UNAUTHENTICATED:
-              description: Request cannot be authenticated and a new authentication is required
-              value:
-                status: 401
-                code: UNAUTHENTICATED
-                message: Request not authenticated due to missing, invalid, or expired credentials.
-
-    Forbidden403:
-      description: Forbidden
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 403
-                  code:
-                    enum:
-                      - PERMISSION_DENIED
-                      - INVALID_TOKEN_CONTEXT
-          examples:
-            GENERIC_403_PERMISSION_DENIED:
-              description: Permission denied. OAuth2 token access does not have the required scope or when the user fails operational security
-              value:
-                status: 403
-                code: PERMISSION_DENIED
-                message: Client does not have sufficient permissions to perform this action.
-            GENERIC_403_INVALID_TOKEN_CONTEXT:
-              description: Reflect some inconsistency between information in some field of the API and the related OAuth2 Token
-              value:
-                status: 403
-                code: INVALID_TOKEN_CONTEXT
-                message: "{{field}} is not consistent with access token."
-
-    NotFound404:
-      description: Not Found
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 404
-                  code:
-                    enum:
-                      - NOT_FOUND
-                      - IDENTIFIER_NOT_FOUND
-          examples:
-            GENERIC_404_NOT_FOUND:
-              description: Resource is not found
-              value:
-                status: 404
-                code: NOT_FOUND
-                message: The specified resource is not found.
-            GENERIC_404_IDENTIFIER_NOT_FOUND:
-              description: Some identifier cannot be matched to a device
-              value:
-                status: 404
-                code: IDENTIFIER_NOT_FOUND
-                message: Device identifier not found.
-
-    Conflict409:
-      description: Conflict
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 409
-                  code:
-                    enum:
-                      - ABORTED
-                      - ALREADY_EXISTS
-                      - CONFLICT
-          examples:
-            GENERIC_409_ABORTED:
-              description: Concurrency of processes of the same nature/scope
-              value:
-                status: 409
-                code: ABORTED
-                message: Concurrency conflict.
-            GENERIC_409_ALREADY_EXISTS:
-              description: Trying to create an existing resource
-              value:
-                status: 409
-                code: ALREADY_EXISTS
-                message: The resource that a client tried to create already exists.
-            GENERIC_409_CONFLICT:
-              description: Duplication of an existing resource
-              value:
-                status: 409
-                code: CONFLICT
-                message: A specified resource duplicate entry found.
-
-    Generic410:
-      description: Gone
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 410
-                  code:
-                    enum:
-                      - GONE
-          examples:
-            GENERIC_410_GONE:
-              description: Use in notifications flow to allow API Consumer to indicate that its callback is no longer available
-              value:
-                status: 410
-                code: GONE
-                message: Access to the target resource is no longer available.
-
-    Generic422:
-      description: Unprocessable Content
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 422
-                  code:
-                    enum:
-                      - SERVICE_NOT_APPLICABLE
-                      - MISSING_IDENTIFIER
-                      - UNSUPPORTED_IDENTIFIER
-                      - UNNECESSARY_IDENTIFIER
-          examples:
-            GENERIC_422_SERVICE_NOT_APPLICABLE:
-              description: Service not applicable for the provided identifier
-              value:
-                status: 422
-                code: SERVICE_NOT_APPLICABLE
-                message: The service is not available for the provided identifier.
-            GENERIC_422_MISSING_IDENTIFIER:
-              description: An identifier is not included in the request and the device or phone number identification cannot be derived from the 3-legged access token
-              value:
-                status: 422
-                code: MISSING_IDENTIFIER
-                message: The device cannot be identified.
-            GENERIC_422_UNSUPPORTED_IDENTIFIER:
-              description: None of the provided identifiers is supported by the implementation
-              value:
-                status: 422
-                code: UNSUPPORTED_IDENTIFIER
-                message: The identifier provided is not supported.
-            GENERIC_422_UNNECESSARY_IDENTIFIER:
-              description: An explicit identifier is provided when a device or phone number has already been identified from the access token
-              value:
-                status: 422
-                code: UNNECESSARY_IDENTIFIER
-                message: The device is already identified by the access token.
-
-    Generic429:
-      description: Too Many Requests
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 429
-                  code:
-                    enum:
-                      - QUOTA_EXCEEDED
-                      - TOO_MANY_REQUESTS
-          examples:
-            GENERIC_429_QUOTA_EXCEEDED:
-              description: Request is rejected due to exceeding a business quota limit
-              value:
-                status: 429
-                code: QUOTA_EXCEEDED
-                message: Out of resource quota.
-            GENERIC_429_TOO_MANY_REQUESTS:
-              description: Access to the API has been temporarily blocked due to rate or spike arrest limits being reached
-              value:
-                status: 429
-                code: TOO_MANY_REQUESTS
-                message: Rate limit reached.
