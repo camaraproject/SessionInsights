@@ -104,7 +104,8 @@ The API definition(s) are based on
 
 ### Added
 
-* N/A
+* Align with Commonalities r4.3(0.8.0)
+* Align with Identity and Consent Management r4.2(0.5.0)
 
 ### Changed
 
