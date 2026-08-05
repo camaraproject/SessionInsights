@@ -106,7 +106,8 @@ The API definition(s) are based on
 
 ### Added
 
-* N/A
+* Align with Commonalities r4.3(0.8.0)
+* Align with Identity and Consent Management r4.2(0.5.0)
 
 ### Changed
 
@@ -118,7 +119,7 @@ The API definition(s) are based on
 
 ### Removed
 
-* N/A
+* Remove MQTT and consolidate to HTTP-only implicit notification subscriptions
 
 **Full Changelog**: https://github.com/camaraproject/SessionInsights/commits/r2.1
 
