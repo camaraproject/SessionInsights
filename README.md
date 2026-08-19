@@ -34,9 +34,9 @@ Sandbox API Repository to describe, develop, document, and test the SessionInsig
 > [!NOTE]
 > This repository has only pre-release versions available yet. Pre-releases are for testing and may change before public release.
 
-* The latest pre-release is [r1.1](https://github.com/camaraproject/SessionInsights/releases/tag/r1.1) (alpha), with the following API versions:
-  * **session-insights 0.1.0-alpha.1**
-  [[YAML]](https://github.com/camaraproject/SessionInsights/blob/r1.1/code/API_definitions/session-insights.yaml)  [[ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r1.1/code/API_definitions/session-insights.yaml&nocors)  [[Swagger]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r1.1/code/API_definitions/session-insights.yaml)
+* The latest pre-release is [r2.1](https://github.com/camaraproject/SessionInsights/releases/tag/r2.1) (release candidate), with the following API versions:
+  * **session-insights 0.2.0-rc.1**
+  [[YAML]](https://github.com/camaraproject/SessionInsights/blob/r2.1/code/API_definitions/session-insights.yaml)  [[ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r2.1/code/API_definitions/session-insights.yaml&nocors)  [[Swagger]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r2.1/code/API_definitions/session-insights.yaml)
 
 * For changes see [CHANGELOG](https://github.com/camaraproject/SessionInsights/tree/main/CHANGELOG)
 
