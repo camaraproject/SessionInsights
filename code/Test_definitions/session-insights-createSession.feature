@@ -32,8 +32,8 @@ Feature: CAMARA Session Insights API, vwip - Operation createSession
     Then the response status code is 201
     And the response header "Content-Type" is "application/json"
     And the response header "x-correlator" has same value as the request header "x-correlator"
-    And the response body complies with the OAS schema at "/components/schemas/Session"
-    And the response property "$.id" is present and complies with the OAS schema at "/components/schemas/SessionId"
+    And the response body complies with the OAS schema at "#/components/schemas/Session"
+    And the response property "$.id" is present and complies with the OAS schema at "#/components/schemas/SessionId"
     And the response property "$.sink" is present
     And the response property "$.startsAt" is present and complies with date-time format
     And the response property "$.expiresAt" complies with date-time format if present
