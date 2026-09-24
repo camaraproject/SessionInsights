@@ -30,9 +30,9 @@ Feature: CAMARA Session Insights API, vwip - Operation retrieveSessionsByDevice
     Then the response status code is 200
     And the response header "Content-Type" is "application/json"
     And the response header "x-correlator" has same value as the request header "x-correlator"
-    And the response body complies with the OAS schema at "/components/schemas/RetrieveSessionsOutput"
+    And the response body complies with the OAS schema at "#/components/schemas/RetrieveSessionsOutput"
     And the response property "$" is an array
-    And each item in the response array complies with the OAS schema at "/components/schemas/Session"
+    And each item in the response array complies with the OAS schema at "#/components/schemas/Session"
     And all sessions in the response belong to the specified device
 
   @session_insights_retrieveSessionsByDevice_02_ipv4_address_2legged_token

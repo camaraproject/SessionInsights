@@ -92,7 +92,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   @session_insights_sendSessionMetrics_400.1_invalid_session_id_format
   Scenario: Invalid sessionId format
     Given the path parameter "sessionId" is set to "not-a-uuid"
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 400
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -104,7 +104,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   @session_insights_sendSessionMetrics_400.2_malformed_uuid_session_id
   Scenario: Malformed UUID sessionId
     Given the path parameter "sessionId" is set to "123e4567-e89b-12d3-a456-42661417400"
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 400
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -259,7 +259,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   Scenario: Error response for no header "Authorization"
     Given the header "Authorization" is not sent
     And an existing active session sessionId
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 401
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -272,7 +272,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   Scenario: Error response for expired access token
     Given the header "Authorization" is set to an expired access token
     And an existing active session sessionId
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 401
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -285,7 +285,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   Scenario: Error response for invalid access token
     Given the header "Authorization" is set to an invalid access token
     And an existing active session sessionId
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 401
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -300,7 +300,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   Scenario: Missing access token scope
     Given the header "Authorization" is set to an access token that does not include the required scope
     And an existing active session sessionId
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 403
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -312,7 +312,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   @session_insights_sendSessionMetrics_403.2_session_token_mismatch
   Scenario: Session not accessible by the API client given in the access token
     Given the header "Authorization" is set to a valid access token emitted to a client which did not create the session
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 403
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -326,7 +326,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   @session_insights_sendSessionMetrics_404.1_session_not_found
   Scenario: sessionId of a non-existing session
     Given the path parameter "sessionId" is set to a random UUID
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 404
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -340,7 +340,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   @session_insights_sendSessionMetrics_410.1_expired_session
   Scenario: Send metrics to expired session
     Given the path parameter "sessionId" is set to the value of an expired session
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 410
     And the response header "x-correlator" has same value as the request header "x-correlator"
@@ -352,7 +352,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
   @session_insights_sendSessionMetrics_410.2_deleted_session
   Scenario: Send metrics to deleted session
     Given the path parameter "sessionId" is set to the value of a previously deleted session
-    And the request body complies with the OAS schema at "/components/schemas/MetricsPayload"
+    And the request body complies with the OAS schema at "#/components/schemas/MetricsPayload"
     When the request "sendSessionMetrics" is sent
     Then the response status code is 410
     And the response header "x-correlator" has same value as the request header "x-correlator"
