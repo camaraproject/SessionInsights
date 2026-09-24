@@ -209,7 +209,7 @@ paths:
                     x-correlator:
                       $ref: "#/components/headers/x-correlator"
                 "400":
-                  $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequestWithRange400"
+                  $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequest400"
                 "401":
                   $ref: "../common/CAMARA_common.yaml#/components/responses/Unauthenticated401"
                 "403":
@@ -253,13 +253,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Session"
         "400":
-          $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequestWithRange400"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequest400"
         "401":
           $ref: "../common/CAMARA_common.yaml#/components/responses/Unauthenticated401"
         "403":
           $ref: "../common/CAMARA_common.yaml#/components/responses/PermissionDenied403"
         "404":
-          $ref: "#/components/responses/SessionInsightsNotFound404"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/NotFound404"
         "410":
           $ref: "#/components/responses/SessionGone410"
 
@@ -289,13 +289,13 @@ paths:
             x-correlator:
               $ref: "#/components/headers/x-correlator"
         "400":
-          $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequestWithRange400"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequest400"
         "401":
           $ref: "../common/CAMARA_common.yaml#/components/responses/Unauthenticated401"
         "403":
           $ref: "../common/CAMARA_common.yaml#/components/responses/PermissionDenied403"
         "404":
-          $ref: "#/components/responses/SessionInsightsNotFound404"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/NotFound404"
         "410":
           $ref: "#/components/responses/SessionGone410"
 
@@ -336,13 +336,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/RetrieveSessionsOutput"
         "400":
-          $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequestWithRange400"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/BadRequest400"
         "401":
           $ref: "../common/CAMARA_common.yaml#/components/responses/Unauthenticated401"
         "403":
           $ref: "../common/CAMARA_common.yaml#/components/responses/PermissionDenied403"
         "404":
-          $ref: "#/components/responses/SessionInsightsNotFound404"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/IdentifierNotFound404"
         "422":
           $ref: "../common/CAMARA_common.yaml#/components/responses/DeviceIdentifier422"
         "429":
@@ -391,11 +391,9 @@ paths:
         "403":
           $ref: "../common/CAMARA_common.yaml#/components/responses/PermissionDenied403"
         "404":
-          $ref: "#/components/responses/SessionInsightsNotFound404"
+          $ref: "../common/CAMARA_common.yaml#/components/responses/NotFound404"
         "410":
           $ref: "#/components/responses/SessionGone410"
-        "422":
-          $ref: "../common/CAMARA_common.yaml#/components/responses/DeviceIdentifier422"
 
 components:
   parameters:
@@ -833,33 +831,6 @@ components:
               $ref: "../common/CAMARA_common.yaml#/components/examples/GENERIC_409_ALREADY_EXISTS"
             GENERIC_409_INCOMPATIBLE_STATE:
               $ref: "../common/CAMARA_common.yaml#/components/examples/GENERIC_409_INCOMPATIBLE_STATE"
-
-    SessionInsightsNotFound404:
-      description: |
-        Not found. The session identified by `sessionId` does not exist, or
-        the device provided in the request could not be identified.
-      headers:
-        x-correlator:
-          $ref: "#/components/headers/x-correlator"
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: "../common/CAMARA_common.yaml#/components/schemas/ErrorInfo"
-              - type: object
-                properties:
-                  status:
-                    enum:
-                      - 404
-                  code:
-                    enum:
-                      - NOT_FOUND
-                      - IDENTIFIER_NOT_FOUND
-          examples:
-            GENERIC_404_NOT_FOUND:
-              $ref: "../common/CAMARA_common.yaml#/components/examples/GENERIC_404_NOT_FOUND"
-            GENERIC_404_IDENTIFIER_NOT_FOUND:
-              $ref: "../common/CAMARA_common.yaml#/components/examples/GENERIC_404_IDENTIFIER_NOT_FOUND"
 
     SessionGone410:
       description: |

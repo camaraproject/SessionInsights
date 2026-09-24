@@ -213,6 +213,54 @@ Feature: CAMARA Session Insights API, vwip - Operation createSession
     And the response property "$.code" is "INVALID_ARGUMENT"
     And the response property "$.message" contains a user friendly text
 
+  @session_insights_createSession_400.11_unsupported_sink_credential_type
+  Scenario: Sink credential type not supported by the API provider
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.sink" is set to a valid webhook URL
+    And the API provider does not support the "PRIVATE_KEY_JWT" sink credential type
+    And the request body property "$.sinkCredential.credentialType" is set to "PRIVATE_KEY_JWT"
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_CREDENTIAL"
+    And the response property "$.message" contains a user friendly text
+
+  @session_insights_createSession_400.12_expired_sink_credential_token
+  Scenario: Expired access token in the sink credential
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.sink" is set to a valid webhook URL
+    And the request body property "$.sinkCredential.credentialType" is set to "ACCESSTOKEN"
+    And the request body property "$.sinkCredential.accessTokenType" is set to "bearer"
+    And the request body property "$.sinkCredential.accessToken" is set to an expired access token
+    And the request body property "$.sinkCredential.accessTokenExpiresUtc" is set to a timestamp in the past
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_TOKEN"
+    And the response property "$.message" contains a user friendly text
+
+  @session_insights_createSession_400.13_sink_not_accepted
+  Scenario: Sink URL is well-formed but not accepted by the API provider
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.sink" is set to a well-formed HTTPS URL that the API provider cannot reach
+    When the request "createSession" is sent
+    Then the response status code is 400
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 400
+    And the response property "$.code" is "INVALID_SINK"
+    And the response property "$.message" contains a user friendly text
+
     # Generic 401 errors
 
   @session_insights_createSession_401.1_no_authorization_header
@@ -312,4 +360,21 @@ Feature: CAMARA Session Insights API, vwip - Operation createSession
     And the response header "Content-Type" is "application/json"
     And the response property "$.status" is 422
     And the response property "$.code" is "MISSING_IDENTIFIER"
+    And the response property "$.message" contains a user friendly text
+
+    # Errors 429
+
+  @session_insights_createSession_429.1_rate_limit_exceeded
+  Scenario: Rate limit exceeded
+    Given a valid device with phoneNumber
+    And a valid Application Profile ID
+    And a valid application server configuration
+    And the request body property "$.sink" is set to a valid webhook URL
+    And the rate limit for this endpoint has been exceeded
+    When the request "createSession" is sent
+    Then the response status code is 429
+    And the response header "x-correlator" has same value as the request header "x-correlator"
+    And the response header "Content-Type" is "application/json"
+    And the response property "$.status" is 429
+    And the response property "$.code" is "TOO_MANY_REQUESTS"
     And the response property "$.message" contains a user friendly text
