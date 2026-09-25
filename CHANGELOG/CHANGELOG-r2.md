@@ -64,15 +64,18 @@ Changes documented below are compared to version 0.2.0-rc.1.
 
 ### Added
 
-* N/A
+* Align with Commonalities r4.4 (0.9.0)
+* Add test scenarios for `createSession` 429 `TOO_MANY_REQUESTS` and 400 `INVALID_CREDENTIAL` / `INVALID_TOKEN` / `INVALID_SINK`
 
 ### Changed
 
-* N/A
+* Migrate error responses off the deprecated `Generic<status>` responses to the Commonalities r4.4 response catalogue and shared examples
+* Use the common `Sink` schema in place of local inline definitions
+* Align documentation with Commonalities template text
 
 ### Fixed
 
-* N/A
+* Remove declared error codes that operations cannot return: `sendSessionMetrics` 422; `OUT_OF_RANGE` on 400 for `getSession`, `deleteSession`, `retrieveSessionsByDevice` and notifications; `IDENTIFIER_NOT_FOUND` on 404 for `getSession`, `deleteSession`, `sendSessionMetrics`; `NOT_FOUND` on 404 for `retrieveSessionsByDevice`
 
 ### Removed
 
