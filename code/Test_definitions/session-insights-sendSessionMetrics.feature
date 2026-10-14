@@ -193,7 +193,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
     And the response header "x-correlator" has same value as the request header "x-correlator"
     And the response header "Content-Type" is "application/json"
     And the response property "$.status" is 400
-    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.code" is "OUT_OF_RANGE"
     And the response property "$.message" contains a user friendly text
 
   @session_insights_sendSessionMetrics_400.8_packet_loss_error_rate_out_of_range
@@ -210,7 +210,7 @@ Feature: CAMARA Session Insights API, vwip - Operation sendSessionMetrics
     And the response header "x-correlator" has same value as the request header "x-correlator"
     And the response header "Content-Type" is "application/json"
     And the response property "$.status" is 400
-    And the response property "$.code" is "INVALID_ARGUMENT"
+    And the response property "$.code" is "OUT_OF_RANGE"
     And the response property "$.message" contains a user friendly text
 
   @session_insights_sendSessionMetrics_400.9_invalid_content_type
