@@ -35,7 +35,7 @@ dependencies:
 apis:
   - api_name: session-insights
     target_api_version: 0.2.0
-    target_api_status: rc
+    target_api_status: public
     main_contacts:
       - benhepworth
       - maheshc01
