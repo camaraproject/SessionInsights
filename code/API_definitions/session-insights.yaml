@@ -70,6 +70,7 @@ info:
     - **`org.camaraproject.session-insights.v0.session-ended`**: Sent when the session ends for any reason (expiry, deletion, or network-initiated termination). No further notifications will be delivered afterward.
 
     <!-- CAMARA:MANDATORY:authorization-and-authentication:BEGIN -->
+
     # Authorization and authentication
 
     The "Camara Security and Interoperability Profile" provides details of how an API consumer requests an access token. Please refer to Identity and Consent Management (https://github.com/camaraproject/IdentityAndConsentManagement/) for the released version of the profile.
