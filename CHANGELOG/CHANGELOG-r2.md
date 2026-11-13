@@ -119,37 +119,27 @@ The API definition(s) are based on
 
 ### Added
 
-* Align with Commonalities r4.4 (0.9.0) and Identity and Consent Management r4.2 (0.5.0), including the mandatory `info.description` templates (authorization and authentication, identifying the device from the access token, additional error responses, request body strictness)
-* Add a Session Quality Score section and `sinkCredential` usage guidance (`ACCESSTOKEN` or `PRIVATE_KEY_JWT`) to the API documentation
-* Add a `callbacks` definition on `createSession` for session notifications (`SessionNotificationEvent` with `EventQualityScore` and `EventSessionEnded`)
-* Add an optional, structured `proposedResolution` (`resolutionType` + `description`) to `quality-score` notifications
-* Add `maxLength`, `format`, `pattern` and numeric bound constraints, plus descriptions, on schemas and properties
-* Add test scenarios: empty request body (400) for `createSession` and `retrieveSessionsByDevice`; `createSession` 429 `TOO_MANY_REQUESTS` and 400 `INVALID_CREDENTIAL` / `INVALID_TOKEN` / `INVALID_SINK`; `sendSessionMetrics` boundary-value scenarios
+* Initial public version of the Session Insights API, with the following operations:
+  * `createSession` (`POST /sessions`): create an insights session for a device and an application server, referencing the Application Profile (`applicationProfileId`) that defines the expected performance thresholds
+  * `getSession` (`GET /sessions/{sessionId}`) and `deleteSession` (`DELETE /sessions/{sessionId}`): read and end an insights session
+  * `retrieveSessionsByDevice` (`POST /retrieve-sessions`): list the insights sessions of a device
+  * `sendSessionMetrics` (`POST /sessions/{sessionId}/metrics`): send application-observed metrics (packet delay, jitter, packet loss rate, upstream and downstream rate)
+* Notifications as CloudEvents to the HTTPS `sink` given on `createSession` (implicit subscription, optional `sinkCredential` with `ACCESSTOKEN` or `PRIVATE_KEY_JWT`):
+  * `quality-score`: session quality score from 0 to 100, with an optional `proposedResolution` when quality degrades
+  * `session-ended`: end of the session, with its `terminationReason`
+* Test definitions for all operations
 
 ### Changed
 
-* Rename `MetricsPayload` fields to align with the ApplicationProfiles API (e.g. `packetLoss` → `packetLossErrorRate`, `latency` → `packetDelay` / `jitter`) and reuse its shared enums (e.g. `RateUnitEnum`)
-* Make `sink` required on `createSession`. Session creation now implicitly subscribes the sink to all session notifications (`quality-score`, `session-ended`)
-* Make `device` optional in the `SessionRequest`/`Session` schemas. Presence is enforced at runtime via `422 MISSING_IDENTIFIER` / `UNNECESSARY_IDENTIFIER`
-* Reduce `SessionStatus` to `ACTIVE`, `EXPIRED`, `DELETED`
-* Align `Duration.value` bounds (`minimum: 1`, `maximum: 500`) with ApplicationProfiles
-* Use `ALREADY_EXISTS` instead of `CONFLICT` for the `createSession` 409
-* Migrate error responses to the Commonalities r4.4 response catalogue and shared examples, and use the common `Device`, `DeviceResponse`, `Sink`, `SinkCredential` and `CloudEvent` schemas instead of local definitions
-* Rename schemas to PascalCase (`HTTPSettings` → `HttpSettings`, etc.)
-* Use consistent terminology in the documentation: "insights session", "send" metrics, "notification"
-* Rename test definition files and tags to match `operationId`s (`retrieveSessionsByDevice`, `sendSessionMetrics`)
+* N/A
 
 ### Fixed
 
-* Remove declared error codes that operations cannot return: the `sendSessionMetrics` 422; `OUT_OF_RANGE` on 400 for `getSession`, `deleteSession`, `retrieveSessionsByDevice` and notifications; `IDENTIFIER_NOT_FOUND` on 404 for `getSession`, `deleteSession`, `sendSessionMetrics`; `NOT_FOUND` on 404 for `retrieveSessionsByDevice`
-* Fix test definitions: expect `OUT_OF_RANGE` for out-of-range `sendSessionMetrics` values; `$.startTime` → `$.startsAt`; reference `Session` instead of the non-existent `CreateSessionResponse`; remove scenarios for undeclared responses; treat `expiresAt` as if-present
-* Correct the `INVALID_CREDENTIAL` example message: `PRIVATE_KEY_JWT` is also supported
+* N/A
 
 ### Removed
 
-* Remove MQTT3/MQTT5 notification support (`MqttSettings`, `MqttSession`, `MqttSessionRequest`). Notifications are HTTPS webhook only, per Commonalities
-* Remove event type selection (`types`) from session request and response (implicit subscription)
-* Remove subscription-lifecycle notifications and `SubscriptionStatus`. Only `session-ended` remains
+* N/A
 
 **Full Changelog**: https://github.com/camaraproject/SessionInsights/commits/r2.3
 
