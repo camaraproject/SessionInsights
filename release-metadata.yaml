@@ -2,7 +2,7 @@ repository:
   repository_name: SessionInsights
   release_tag: r2.3
   release_type: public-release
-  release_date: null
+  release_date: '2026-11-17T23:38:46Z'
   src_commit_sha: 9c6ee06bef58ea3a2f84cd0fd3df1520ad1ef440
 apis:
 - api_name: session-insights
