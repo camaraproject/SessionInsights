@@ -32,12 +32,14 @@ Sandbox API Repository to describe, develop, document, and test the SessionInsig
 ## Release Information
 
 > [!NOTE]
-> This repository has only pre-release versions available yet. Pre-releases are for testing and may change before public release.
+> Please be aware that the project will have frequent updates to the main branch. There are no compatibility guarantees associated with code in any branch, including main, until a new release is created. For example, changes may be reverted before a release is created. **For best results, use the latest available release**.
 
-* The latest pre-release is [r2.2](https://github.com/camaraproject/SessionInsights/releases/tag/r2.2) (release candidate), with the following API versions:
-  * **session-insights 0.2.0-rc.2**
-  [[YAML]](https://github.com/camaraproject/SessionInsights/blob/r2.2/code/API_definitions/session-insights.yaml)  [[ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r2.2/code/API_definitions/session-insights.yaml&nocors)  [[Swagger]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r2.2/code/API_definitions/session-insights.yaml)
+* The latest public release is [r2.3](https://github.com/camaraproject/SessionInsights/releases/tag/r2.3) (Sync26), with the following API versions:
+  * **session-insights 0.2.0**
+  [[YAML]](https://github.com/camaraproject/SessionInsights/blob/r2.3/code/API_definitions/session-insights.yaml)  [[ReDoc]](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r2.3/code/API_definitions/session-insights.yaml&nocors)  [[Swagger]](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r2.3/code/API_definitions/session-insights.yaml)
 
+* The latest public release is always available here: https://github.com/camaraproject/SessionInsights/releases/latest
+* Other releases of this repository are available in https://github.com/camaraproject/SessionInsights/releases
 * For changes see [CHANGELOG](https://github.com/camaraproject/SessionInsights/tree/main/CHANGELOG)
 
 _The above section is automatically synchronized by CAMARA project-administration._

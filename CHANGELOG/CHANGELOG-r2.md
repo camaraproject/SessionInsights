@@ -2,6 +2,7 @@
 
 <!-- TOC:START -->
 ## Table of Contents
+- **[r2.3](#r23)**
 - [r2.2](#r22)
 - [r2.1](#r21)
 <!-- TOC:END -->
@@ -14,6 +15,56 @@ The below sections record the changes for each API version in each release as fo
 * for the first release-candidate, all changes since the last public release
 * for subsequent release-candidate(s), only the delta to the previous release-candidate
 * for a public release, the consolidated changes since the previous public release
+
+# r2.3
+
+## Release Notes
+
+This public release contains the definition and documentation of
+* session-insights 0.2.0
+
+The API definition(s) are based on
+* Commonalities r4.4 (0.9.0)
+* Identity and Consent Management r4.2 (0.5.0)
+
+## session-insights 0.2.0
+
+**session-insights 0.2.0 is an initial public version of this API.**
+
+- API definition **with inline documentation**:
+  - [View it on ReDoc](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r2.3/code/API_definitions/session-insights.yaml&nocors)
+  - [View it on Swagger Editor](https://camaraproject.github.io/swagger-ui/?url=https://raw.githubusercontent.com/camaraproject/SessionInsights/r2.3/code/API_definitions/session-insights.yaml)
+  - OpenAPI [YAML spec file](https://github.com/camaraproject/SessionInsights/blob/r2.3/code/API_definitions/session-insights.yaml)
+
+### Breaking changes
+
+* N/A
+
+### Added
+
+* Initial public version of the Session Insights API, with the following operations:
+  * `createSession` (`POST /sessions`): create an insights session for a device and an application server, referencing the Application Profile (`applicationProfileId`) that defines the expected performance thresholds
+  * `getSession` (`GET /sessions/{sessionId}`) and `deleteSession` (`DELETE /sessions/{sessionId}`): read and end an insights session
+  * `retrieveSessionsByDevice` (`POST /retrieve-sessions`): list the insights sessions of a device
+  * `sendSessionMetrics` (`POST /sessions/{sessionId}/metrics`): send application-observed metrics (packet delay, jitter, packet loss rate, upstream and downstream rate)
+* Notifications as CloudEvents to the HTTPS `sink` given on `createSession` (implicit subscription, optional `sinkCredential` with `ACCESSTOKEN` or `PRIVATE_KEY_JWT`):
+  * `quality-score`: session quality score from 0 to 100, with an optional `proposedResolution` when quality degrades
+  * `session-ended`: end of the session, with its `terminationReason`
+* Test definitions for all operations
+
+### Changed
+
+* N/A
+
+### Fixed
+
+* N/A
+
+### Removed
+
+* N/A
+
+**Full Changelog**: https://github.com/camaraproject/SessionInsights/commits/r2.3
 
 # r2.2
 
